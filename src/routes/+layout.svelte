@@ -3,8 +3,10 @@
 	import { ParaglideJS } from '@inlang/paraglide-sveltekit';
 	import '../app.css';
 	let { children } = $props();
+	
 </script>
 
 <ParaglideJS {i18n}>
 	{@render children()}
 </ParaglideJS>
+
