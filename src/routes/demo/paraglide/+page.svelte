@@ -21,4 +21,5 @@
 	<button onclick={() => switchToLanguage('de-ch')}>de-ch</button>
 	<button onclick={() => switchToLanguage('ja')}>ja</button>
 	<button onclick={() => switchToLanguage('nl')}>nl</button>
+	<button onclick={() => switchToLanguage('zh')}>zh</button>
 </div>

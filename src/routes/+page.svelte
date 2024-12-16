@@ -1,3 +1,2 @@
-<div class="container h-full mx-auto flex justify-center items-center">
-    <h1 class="h1">Hello Wintry Theme!</h1>
-  </div>
+<h1>Welcome to SvelteKit</h1>
+<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
