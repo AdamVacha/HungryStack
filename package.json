@@ -43,6 +43,12 @@
 	},
 	"dependencies": {
 		"@auth/sveltekit": "^1.7.4",
+		"@codemirror/basic-setup": "^0.20.0",
+		"@codemirror/lang-css": "^6.3.1",
+		"@codemirror/lang-html": "^6.4.9",
+		"@codemirror/lang-javascript": "^6.2.2",
+		"@codemirror/state": "^6.5.0",
+		"@codemirror/view": "^6.35.3",
 		"@codesandbox/sandpack-react": "^2.19.10",
 		"@inlang/paraglide-sveltekit": "^0.11.1",
 		"@neondatabase/serverless": "^0.9.4",
