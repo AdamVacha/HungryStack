@@ -1,2 +1,3 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<div class="container mx-auto flex h-full items-center justify-center">
+	<h1 class="h1">Hello Hungry Stack!</h1>
+</div>
