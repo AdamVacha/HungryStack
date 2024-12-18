@@ -17,6 +17,9 @@ importers:
       '@inlang/paraglide-sveltekit':
         specifier: ^0.11.1
         version: 0.11.5(@sveltejs/kit@2.12.1(@sveltejs/vite-plugin-svelte@5.0.2(svelte@5.14.1)(vite@6.0.3(@types/node@22.10.2)(jiti@1.21.6)(yaml@2.6.1)))(svelte@5.14.1)(vite@6.0.3(@types/node@22.10.2)(jiti@1.21.6)(yaml@2.6.1)))
+      '@lottiefiles/dotlottie-svelte':
+        specifier: ^0.4.3
+        version: 0.4.3(svelte@5.14.1)
       '@neondatabase/serverless':
         specifier: ^0.9.5
         version: 0.9.5
@@ -1122,6 +1125,14 @@ packages:
 
   '@lix-js/fs@2.2.0':
     resolution: {integrity: sha512-B9X3FjD8WmdG7tbA44JuniSO0KdKBWnjfxl8zpgrDCkavrp/GP7U0xxBkc0WgeeoHjQ/pkqq9VqtWB2kS9jIUg==}
+
+  '@lottiefiles/dotlottie-svelte@0.4.3':
+    resolution: {integrity: sha512-ngS1aHGrDf/GexZ8iBwVJEcppNG/RbFVOqyU7Jqb4kuu9ZBvnQR8owCwbnHD14Gsk0UHKKs9EFZqX7XI2FkMoA==}
+    peerDependencies:
+      svelte: ^4.0.0
+
+  '@lottiefiles/dotlottie-web@0.38.2':
+    resolution: {integrity: sha512-01d+UjJ8NG7ZStYQxtb8FPzknzGmauG7gEkcH+wHfSdiSQJY9PoBNVSTB9V6F5hAnmFqOxaocTtd7TIEEnzMnA==}
 
   '@marijn/find-cluster-break@1.0.2':
     resolution: {integrity: sha512-l0h88YhZFyKdXIFNfSWpyjStDjGHwZ/U7iobcK1cQQD8sejsONdQtTVU+1wVN1PBw40PiiHB1vA5S7VTfQiP9g==}
@@ -4259,6 +4270,13 @@ snapshots:
   '@lix-js/fs@2.2.0':
     dependencies:
       typescript: 5.2.2
+
+  '@lottiefiles/dotlottie-svelte@0.4.3(svelte@5.14.1)':
+    dependencies:
+      '@lottiefiles/dotlottie-web': 0.38.2
+      svelte: 5.14.1
+
+  '@lottiefiles/dotlottie-web@0.38.2': {}
 
   '@marijn/find-cluster-break@1.0.2': {}
 
