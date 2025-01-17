@@ -1,12 +1,18 @@
 <!doctype html>
-<html data-theme="vintage" lang="%paraglide.lang%" dir="%paraglide.textDirection%">
+<html data-theme="my-custom-theme" lang="%paraglide.lang%" dir="%paraglide.textDirection%">
 	<head>
 		<meta charset="utf-8" />
 		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		%sveltekit.head%
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap"
+			rel="stylesheet"
+		/>
 	</head>
-	<body data-theme="vintage" data-sveltekit-preload-data="hover" class="h-full">
+	<body data-theme="my-custom-theme" data-sveltekit-preload-data="hover" class="h-full">
 		<div style="display: contents">%sveltekit.body%</div>
 	</body>
 </html>
