@@ -4,9 +4,10 @@ import typography from '@tailwindcss/typography';
 import type { Config } from 'tailwindcss';
 import { join } from 'path';
 import { skeleton } from '@skeletonlabs/tw-plugin';
+import { myCustomTheme } from './my-custom-theme';
 
 const config = {
-	darkMode: 'class',
+	darkMode: 'selector',
 
 	content: [
 		'./src/**/*.{html,js,svelte,ts}',
@@ -22,7 +23,7 @@ const config = {
 		forms,
 		containerQueries,
 		skeleton({
-			themes: { preset: ['vintage'] }
+			themes: { custom: [myCustomTheme] }
 		})
 	]
 } satisfies Config;
