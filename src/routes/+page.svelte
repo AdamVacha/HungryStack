@@ -13,30 +13,31 @@
 				<img
 					src="/images/mascot.png"
 					alt="Mascot"
-					class="relative z-10 h-40 animate-bounce sm:h-80"
+					class="relative z-10 h-40 animate-bounce sm:h-96"
 				/>
 			</figure>
 		</div>
 
 		<!-- Right Section: Text-->
-		<div class="w-2/5">
-			<h1 class="text-4xl font-bold dark:text-white">
-				Master Full-Stack Development, One Bite at a Time.
+		<div class="w-1/2">
+			<h1 class="text-5xl font-bold dark:text-white">
+				Master Full-Stack Development,
+				<span class="block">One Bite at a Time.</span>
 			</h1>
 			<p class="mt-4 text-lg dark:text-white">Framework-agnostic and designed for beginners.</p>
 			<div class="mt-8 flex space-x-4">
-				<button
-					type="button"
+				<a
+					href="/login"
 					class="variant-filled-tertiary btn px-6 py-3 font-semibold text-white dark:variant-filled-primary"
 				>
 					Get Started
-				</button>
-				<button
-					type="button"
+				</a>
+				<a
+					href="/"
 					class="variant-ringed-tertiary btn px-6 py-3 font-semibold dark:variant-ringed-primary dark:text-white"
 				>
-					I Already Have an Account
-				</button>
+					Learn More
+				</a>
 			</div>
 		</div>
 	</main>
