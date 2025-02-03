@@ -8,6 +8,11 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      GITHUB_ID: ${{ secrets.GITHUB_ID }}
+      GITHUB_SECRET: ${{ secrets.GITHUB_SECRET }}
+      GOOGLE_ID: ${{ secrets.GOOGLE_ID }}
+      GOOGLE_SECRET: ${{ secrets.GOOGLE_SECRET }}
 
     steps:
       - uses: actions/checkout@v4
