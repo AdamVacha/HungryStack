@@ -1,14 +1,19 @@
-FROM node:20-alpine
-
+# Build stage
+FROM node:20-slim AS builder
+RUN npm install -g pnpm@8
 WORKDIR /app
-
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-# Copy project files
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install
 COPY . .
+RUN pnpm build
 
-# Just build, don't try to run
-RUN pnpm install --frozen-lockfile \
-    && pnpm exec vite build \
-    && echo "✨ Build completed successfully! PR is ready to merge."
+# Production stage
+FROM node:20-slim
+WORKDIR /app
+RUN npm install -g pnpm@8
+COPY --from=builder /app/build build/
+COPY --from=builder /app/package.json .
+COPY --from=builder /app/pnpm-lock.yaml .
+RUN pnpm install --prod
+EXPOSE 5173 
+CMD ["pnpm", "dev", "--host"]
