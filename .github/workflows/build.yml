@@ -63,7 +63,7 @@ jobs:
        run: pnpm drizzle-kit generate
        
      - name: Run Database Migrations
-       run: pnpm drizzle-kit push --force
+       run: pnpm drizzle-kit migrate
        
      - name: Build
        run: pnpm build
