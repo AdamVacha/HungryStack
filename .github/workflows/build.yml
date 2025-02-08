@@ -29,7 +29,7 @@ jobs:
      GOOGLE_ID: ${{ secrets.GOOGLE_ID }}
      GOOGLE_SECRET: ${{ secrets.GOOGLE_SECRET }}
      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/hungrystack_test
-
+     
    steps:
      - uses: actions/checkout@v4
      
@@ -58,9 +58,12 @@ jobs:
            
      - name: Install dependencies
        run: pnpm install
+
+     - name: Generate Database Migrations
+       run: pnpm drizzle-kit generate
        
-     - name: Run Database Migrations  
-       run: pnpm drizzle-kit push
+     - name: Run Database Migrations
+       run: pnpm drizzle-kit push --force
        
      - name: Build
        run: pnpm build
