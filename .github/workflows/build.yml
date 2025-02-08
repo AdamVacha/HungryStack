@@ -1,47 +1,69 @@
 name: Build Check
-
 on:
-  pull_request:
-    branches: ['main']
-  workflow_dispatch:
+ pull_request:
+   branches: ['main']
+ workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    env:
-      GITHUB_ID: ${{ secrets.GITHUB_ID }}
-      GITHUB_SECRET: ${{ secrets.GITHUB_SECRET }}
-      GOOGLE_ID: ${{ secrets.GOOGLE_ID }}
-      GOOGLE_SECRET: ${{ secrets.GOOGLE_SECRET }}
+ build:
+   runs-on: ubuntu-latest
+   
+   services:
+     postgres:
+       image: postgres:latest
+       env:
+         POSTGRES_USER: postgres
+         POSTGRES_PASSWORD: postgres
+         POSTGRES_DB: hungrystack_test
+       ports:
+         - 5432:5432
+       options: >-
+         --health-cmd pg_isready
+         --health-interval 10s
+         --health-timeout 5s
+         --health-retries 5
 
-    steps:
-      - uses: actions/checkout@v4
+   env:
+     GITHUB_ID: ${{ secrets.GITHUB_ID }}
+     GITHUB_SECRET: ${{ secrets.GITHUB_SECRET }}
+     GOOGLE_ID: ${{ secrets.GOOGLE_ID }}
+     GOOGLE_SECRET: ${{ secrets.GOOGLE_SECRET }}
+     DATABASE_URL: postgresql://postgres:postgres@localhost:5432/hungrystack_test
+     
+   steps:
+     - uses: actions/checkout@v4
+     
+     - name: Setup Node.js
+       uses: actions/setup-node@v4
+       with:
+         node-version: '20'
+         
+     - name: Install pnpm
+       uses: pnpm/action-setup@v2
+       with:
+         version: 8
+         
+     - name: Get pnpm store directory
+       shell: bash
+       run: |
+         echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+         
+     - name: Setup pnpm cache
+       uses: actions/cache@v3
+       with:
+         path: ${{ env.STORE_PATH }}
+         key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+         restore-keys: |
+           ${{ runner.os }}-pnpm-store-
+           
+     - name: Install dependencies
+       run: pnpm install
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8 # or whatever version you're using
-
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Build
-        run: pnpm build
+     - name: Generate Database Migrations
+       run: pnpm drizzle-kit generate
+       
+     - name: Run Database Migrations
+       run: pnpm drizzle-kit migrate
+       
+     - name: Build
+       run: pnpm build
