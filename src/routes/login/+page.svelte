@@ -2,6 +2,7 @@
 	import { signIn, signOut } from '@auth/sveltekit/client';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import { DotLottieSvelte } from '@lottiefiles/dotlottie-svelte';
 
 	console.log(page.data.session);
 
@@ -14,11 +15,10 @@
 	class="flex min-h-screen items-center justify-center bg-gradient-to-b from-surface-100 to-tertiary-100 dark:from-surface-700 dark:to-surface-900"
 >
 	<div class="card w-full max-w-lg p-10 shadow-lg">
-		<!-- Logo and Title -->
+		<!-- Welcome and Animation -->
 		<header class="card-header mb-6 text-center">
 			<h1 class="text-2xl font-bold">Welcome to Hungry Stack</h1>
-			<img src="/images/mascot.png" alt="Hungry Stack Mascot" class="mx-auto h-36" />
-
+			<DotLottieSvelte src="/animations/pancakes.lottie" loop={true} autoplay={true} />
 			<p>Sign in or sign up to continue learning!</p>
 		</header>
 
