@@ -1,7 +1,6 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { goto } from '$app/navigation';
 
 	let username = page?.data?.session?.user?.name ?? 'Guest';
 	//TODO: Update progress with $state rune / db
