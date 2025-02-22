@@ -27,6 +27,7 @@
 		"@sveltejs/adapter-node": "^5.2.12",
 		"@sveltejs/kit": "^2.9.0",
 		"@sveltejs/vite-plugin-svelte": "^5.0.0",
+		"@types/codemirror": "^5.60.15",
 		"@types/node": "^22.10.2",
 		"autoprefixer": "^10.4.20",
 		"dotenv": "^16.4.7",
@@ -50,8 +51,12 @@
 	},
 	"dependencies": {
 		"@auth/core": "^0.37.4",
+		"@auth/drizzle-adapter": "^1.7.4",
 		"@auth/sveltekit": "^1.7.4",
 		"@codemirror/basic-setup": "^0.20.0",
+		"@codemirror/lang-html": "^6.4.9",
+		"@codemirror/state": "^6.5.2",
+		"@codemirror/view": "^6.36.3",
 		"@codesandbox/sandpack-react": "^2.19.10",
 		"@floating-ui/dom": "^1.6.13",
 		"@inlang/paraglide-sveltekit": "^0.11.1",
@@ -61,9 +66,11 @@
 		"@tailwindcss/forms": "^0.5.9",
 		"@tailwindcss/typography": "^0.5.15",
 		"chart.js": "^4.4.7",
+		"codemirror": "^6.0.1",
 		"drizzle-orm": "^0.33.0",
 		"lottie-web": "^5.12.2",
 		"pnpm": "^10.2.1",
-		"postgres": "^3.4.5"
+		"postgres": "^3.4.5",
+		"svelte-codemirror-editor": "^1.4.1"
 	}
 }
