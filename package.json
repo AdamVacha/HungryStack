@@ -53,6 +53,7 @@
 		"@auth/core": "^0.37.4",
 		"@auth/drizzle-adapter": "^1.7.4",
 		"@auth/sveltekit": "^1.7.4",
+		"@codemirror/basic-setup": "^0.20.0",
 		"@codemirror/lang-html": "^6.4.9",
 		"@codemirror/state": "^6.5.2",
 		"@codemirror/view": "^6.36.3",
