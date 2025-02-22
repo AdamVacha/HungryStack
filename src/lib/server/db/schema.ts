@@ -12,32 +12,34 @@ import {
 } from 'drizzle-orm/pg-core';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+import type { AdapterAccount } from '@auth/core/adapters';
+import { env } from '$env/dynamic/private';
 
-const dbUrl = process.env.DATABASE_URL;
+const dbUrl = env.DATABASE_URL;
 if (!dbUrl) throw new Error('DATABASE_URL is required');
 
 const client = postgres(dbUrl);
 export const db = drizzle(client);
 
 // Auth.js required tables
-export const users = pgTable('users', {
+export const users = pgTable('user', {
 	id: text('id').notNull().primaryKey(),
 	name: text('name'),
-	email: text('email').notNull(),
-	emailVerified: timestamp('emailVerified'),
+	email: text('email').notNull().unique(),
+	emailVerified: timestamp('emailVerified', { mode: 'date' }),
 	image: text('image'),
 	createdAt: timestamp('created_at').defaultNow(),
 	lastLogin: timestamp('last_login'),
-	isActive: boolean('is_active').default(true)
+	isActive: boolean('is_active').default(false)
 });
 
 export const accounts = pgTable(
-	'accounts',
+	'account',
 	{
 		userId: text('userId')
 			.notNull()
 			.references(() => users.id, { onDelete: 'cascade' }),
-		type: text('type').notNull(),
+		type: text('type').$type<AdapterAccount['type']>().notNull(),
 		provider: text('provider').notNull(),
 		providerAccountId: text('providerAccountId').notNull(),
 		refresh_token: text('refresh_token'),
@@ -49,27 +51,27 @@ export const accounts = pgTable(
 		session_state: text('session_state')
 	},
 	(table) => ({
-		pk: primaryKey({ columns: [table.provider, table.providerAccountId] })
+		compoundKey: primaryKey({ columns: [table.provider, table.providerAccountId] })
 	})
 );
 
-export const sessions = pgTable('sessions', {
-	id: text('id').primaryKey(),
+export const sessions = pgTable('session', {
+	sessionToken: text('sessionToken').primaryKey(),
 	userId: text('userId')
 		.notNull()
 		.references(() => users.id, { onDelete: 'cascade' }),
-	expires: timestamp('expires').notNull()
+	expires: timestamp('expires', { mode: 'date' }).notNull()
 });
 
 export const verificationTokens = pgTable(
-	'verification_tokens',
+	'verificationToken',
 	{
 		identifier: text('identifier').notNull(),
 		token: text('token').notNull(),
-		expires: timestamp('expires').notNull()
+		expires: timestamp('expires', { mode: 'date' }).notNull()
 	},
 	(table) => ({
-		pk: primaryKey({ columns: [table.identifier, table.token] })
+		compoundKey: primaryKey({ columns: [table.identifier, table.token] })
 	})
 );
 
@@ -84,7 +86,7 @@ export const learningPaths = pgTable('learning_paths', {
 
 export const tiers = pgTable('tiers', {
 	id: serial('tier_id').primaryKey(),
-	pathId: integer('path_id').references(() => learningPaths.id),
+	pathId: integer('path_id').references(() => learningPaths.id, { onDelete: 'cascade' }),
 	name: text('name').notNull(),
 	description: text('description'),
 	progressStart: integer('progress_start'),
@@ -94,7 +96,7 @@ export const tiers = pgTable('tiers', {
 
 export const lessons = pgTable('lessons', {
 	id: serial('lesson_id').primaryKey(),
-	tierId: integer('tier_id').references(() => tiers.id),
+	tierId: integer('tier_id').references(() => tiers.id, { onDelete: 'cascade' }),
 	title: text('title').notNull(),
 	content: text('content'),
 	orderInTier: integer('order_in_tier'),
@@ -107,7 +109,7 @@ export const lessons = pgTable('lessons', {
 export const studentProfiles = pgTable('student_profiles', {
 	studentId: text('student_id')
 		.primaryKey()
-		.references(() => users.id),
+		.references(() => users.id, { onDelete: 'cascade' }),
 	rank: text('rank').default('beginner'),
 	totalStudyTime: integer('total_study_time').default(0),
 	points: integer('points').default(0),
@@ -118,21 +120,25 @@ export const studentProfiles = pgTable('student_profiles', {
 export const studentProgress = pgTable(
 	'student_progress',
 	{
-		studentId: text('student_id').references(() => users.id),
-		lessonId: integer('lesson_id').references(() => lessons.id),
+		studentId: text('student_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		lessonId: integer('lesson_id')
+			.notNull()
+			.references(() => lessons.id, { onDelete: 'cascade' }),
 		completedAt: timestamp('completed_at'),
 		timeSpent: integer('time_spent'),
 		attempts: integer('attempts').default(1)
 	},
 	(table) => ({
-		pk: primaryKey({ columns: [table.studentId, table.lessonId] })
+		compoundKey: primaryKey({ columns: [table.studentId, table.lessonId] })
 	})
 );
 
 // Exercises and submissions
 export const exercises = pgTable('exercises', {
 	id: serial('exercise_id').primaryKey(),
-	lessonId: integer('lesson_id').references(() => lessons.id),
+	lessonId: integer('lesson_id').references(() => lessons.id, { onDelete: 'cascade' }),
 	title: text('title'),
 	description: text('description'),
 	initialCode: text('initial_code'),
@@ -142,8 +148,8 @@ export const exercises = pgTable('exercises', {
 
 export const submissions = pgTable('submissions', {
 	id: serial('submission_id').primaryKey(),
-	studentId: text('student_id').references(() => users.id),
-	exerciseId: integer('exercise_id').references(() => exercises.id),
+	studentId: text('student_id').references(() => users.id, { onDelete: 'cascade' }),
+	exerciseId: integer('exercise_id').references(() => exercises.id, { onDelete: 'cascade' }),
 	submittedCode: text('submitted_code'),
 	isCorrect: boolean('is_correct'),
 	submittedAt: timestamp('submitted_at').defaultNow()
@@ -161,19 +167,23 @@ export const achievements = pgTable('achievements', {
 export const studentAchievements = pgTable(
 	'student_achievements',
 	{
-		studentId: text('student_id').references(() => users.id),
-		achievementId: integer('achievement_id').references(() => achievements.id),
+		studentId: text('student_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		achievementId: integer('achievement_id')
+			.notNull()
+			.references(() => achievements.id, { onDelete: 'cascade' }),
 		earnedAt: timestamp('earned_at').defaultNow()
 	},
 	(table) => ({
-		pk: primaryKey({ columns: [table.studentId, table.achievementId] })
+		compoundKey: primaryKey({ columns: [table.studentId, table.achievementId] })
 	})
 );
 
 // Assessments
 export const quizzes = pgTable('quizzes', {
 	id: serial('quiz_id').primaryKey(),
-	lessonId: integer('lesson_id').references(() => lessons.id),
+	lessonId: integer('lesson_id').references(() => lessons.id, { onDelete: 'cascade' }),
 	title: text('title').notNull(),
 	description: text('description'),
 	passingScore: integer('passing_score'),
@@ -182,7 +192,7 @@ export const quizzes = pgTable('quizzes', {
 
 export const quizQuestions = pgTable('quiz_questions', {
 	id: serial('question_id').primaryKey(),
-	quizId: integer('quiz_id').references(() => quizzes.id),
+	quizId: integer('quiz_id').references(() => quizzes.id, { onDelete: 'cascade' }),
 	questionText: text('question_text').notNull(),
 	questionType: text('question_type'),
 	correctAnswer: jsonb('correct_answer'),
@@ -192,8 +202,12 @@ export const quizQuestions = pgTable('quiz_questions', {
 
 export const studentQuizAttempts = pgTable('student_quiz_attempts', {
 	id: serial('attempt_id').primaryKey(),
-	studentId: text('student_id').references(() => users.id),
-	quizId: integer('quiz_id').references(() => quizzes.id),
+	studentId: text('student_id')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade' }),
+	quizId: integer('quiz_id')
+		.notNull()
+		.references(() => quizzes.id, { onDelete: 'cascade' }),
 	score: integer('score'),
 	completed: boolean('completed'),
 	attemptedAt: timestamp('attempted_at').defaultNow()
@@ -202,7 +216,7 @@ export const studentQuizAttempts = pgTable('student_quiz_attempts', {
 // Projects
 export const projects = pgTable('projects', {
 	id: serial('project_id').primaryKey(),
-	tierId: integer('tier_id').references(() => tiers.id),
+	tierId: integer('tier_id').references(() => tiers.id, { onDelete: 'cascade' }),
 	title: text('title').notNull(),
 	description: text('description'),
 	requirements: jsonb('requirements'),
@@ -211,8 +225,12 @@ export const projects = pgTable('projects', {
 
 export const studentProjects = pgTable('student_projects', {
 	id: serial('submission_id').primaryKey(),
-	studentId: text('student_id').references(() => users.id),
-	projectId: integer('project_id').references(() => projects.id),
+	studentId: text('student_id')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade' }),
+	projectId: integer('project_id')
+		.notNull()
+		.references(() => projects.id, { onDelete: 'cascade' }),
 	repositoryUrl: text('repository_url'),
 	liveUrl: text('live_url'),
 	grade: integer('grade'),
