@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { signIn, signOut } from '@auth/sveltekit/client';
+	import { signIn } from '@auth/sveltekit/client';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { DotLottieSvelte } from '@lottiefiles/dotlottie-svelte';

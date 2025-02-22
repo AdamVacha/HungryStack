@@ -1,5 +1,6 @@
 <script>
 	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
 
 	let username = page?.data?.session?.user?.name ?? 'Guest';
 	let progress = {
@@ -30,9 +31,9 @@
 			image: '/badges/daily-flipper-badge.png'
 		},
 		{
-			title: 'Syntax Chef',
-			description: 'Wrote 10 correct code snippets!',
-			image: '/badges/syntax-chef-badge.png'
+			title: 'Late Night Coder',
+			description: 'Completed a lesson after midnight',
+			image: '/badges/late-night-coder-badge.png'
 		},
 		{
 			title: 'Syntax Chef',
@@ -57,6 +58,13 @@
 	function updateMessage(category) {
 		speechBubbleText = messages[category] || messages.default;
 	}
+
+	/**
+	 * @param {string} lesson
+	 */
+	function navigateToLesson(lesson) {
+		goto(`/lessons/${lesson}`);
+	}
 </script>
 
 <main class="min-h-screen">
@@ -79,55 +87,55 @@
 		<!-- Pancake Stack Column (70%) -->
 		<section class="p-10 lg:col-span-7">
 			<div class="pancake-stack my-4 flex flex-col items-center text-gray-700">
-				<div
+				<button
 					class="pancake html"
-					role="button"
 					tabindex="0"
 					on:mouseenter={() => updateMessage('html')}
 					on:mouseleave={() => updateMessage('default')}
+					on:click={() => navigateToLesson('html')}
 				>
 					<div class="butter"></div>
 					<p class="font-semibold">HTML</p>
 					<div class="progress-bar">
 						<div class="progress" style="width: {progress.html}%;"></div>
 					</div>
-				</div>
-				<div
+				</button>
+				<button
 					class="pancake css"
-					role="button"
 					tabindex="0"
 					on:mouseenter={() => updateMessage('css')}
 					on:mouseleave={() => updateMessage('default')}
+					on:click={() => navigateToLesson('css')}
 				>
 					<p class="font-semibold">CSS</p>
 					<div class="progress-bar">
 						<div class="progress" style="width: {progress.css}%;"></div>
 					</div>
-				</div>
-				<div
+				</button>
+				<button
 					class="pancake js"
-					role="button"
 					tabindex="0"
 					on:mouseenter={() => updateMessage('js')}
 					on:mouseleave={() => updateMessage('default')}
+					on:click={() => navigateToLesson('js')}
 				>
 					<p class="font-semibold">JavaScript</p>
 					<div class="progress-bar">
 						<div class="progress" style="width: {progress.javascript}%;"></div>
 					</div>
-				</div>
-				<div
+				</button>
+				<button
 					class="pancake backend"
-					role="button"
 					tabindex="0"
 					on:mouseenter={() => updateMessage('backend')}
 					on:mouseleave={() => updateMessage('default')}
+					on:click={() => navigateToLesson('backend')}
 				>
 					<p class="font-semibold">Backend</p>
 					<div class="progress-bar">
 						<div class="progress" style="width: {progress.backend}%;"></div>
 					</div>
-				</div>
+				</button>
 			</div>
 		</section>
 	</section>
