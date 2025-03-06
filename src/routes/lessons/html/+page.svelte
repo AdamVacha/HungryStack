@@ -1,5 +1,9 @@
 <script lang="ts">
-	// Module State Mangagement
+	import { awardModuleCompletionBadges } from '$lib/badges/badgeStore';
+	import { showMultipleBadgeNotifications } from '$lib/badges/badgeNotification';
+	import BadgeNotification from '../../../lib/components/BadgeNotification.svelte';
+
+	// Module State Management
 	let isModulesPanelOpen = $state(true);
 	let isCodePanelHorizontal = $state(true);
 
@@ -132,11 +136,23 @@
 		// check completion status
 		const allCompleted = module.lessons.every((lesson) => lessonCompletions[lesson.id]);
 
+		// if already completed, no need to do anything
+		if (moduleCompletions[moduleId] === true) return;
+
 		// update module completion state
 		moduleCompletions[moduleId] = allCompleted;
 
-		// module completed? unlock next module
+		// module completed? unlock next module and award badges
 		if (allCompleted) {
+			// award badges for module completion
+			const earnedBadges = awardModuleCompletionBadges(moduleId);
+
+			// show notifications if badges were earned
+			if (earnedBadges.length > 0) {
+				showMultipleBadgeNotifications(earnedBadges);
+			}
+
+			// unlock next module
 			const currentIndex = modules.findIndex((m) => m.id === moduleId);
 			if (currentIndex < modules.length - 1) {
 				moduleLocks[modules[currentIndex + 1].id] = false;
@@ -162,7 +178,24 @@
 
 	// mark current lesson as completed
 	function markLessonComplete() {
+		// if already completed, no need to do anything
+		if (lessonCompletions[currentLesson.id]) return;
+
+		// mark as completed
 		lessonCompletions[currentLesson.id] = true;
+
+		// check if this is the first completed lesson
+		const isFirstLesson = Object.values(lessonCompletions).filter(Boolean).length === 1;
+
+		// award first lesson badge if applicable
+		if (isFirstLesson) {
+			const firstBiteBadge = awardModuleCompletionBadges('first-lesson');
+			if (firstBiteBadge.length > 0) {
+				showMultipleBadgeNotifications(firstBiteBadge);
+			}
+		}
+
+		// check for module completion
 		checkModuleCompletion(currentModule.id);
 	}
 
@@ -220,6 +253,9 @@
 </script>
 
 <main class="flex min-h-screen w-full flex-col overflow-y-auto p-6 lg:flex-row">
+	
+	<BadgeNotification />
+
 	<!-- Collapsible Modules Panel -->
 	<div
 		class="relative transition-all duration-300"
