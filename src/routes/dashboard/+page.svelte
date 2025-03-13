@@ -1,8 +1,9 @@
 <script>
-	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 
 	let username = page?.data?.session?.user?.name ?? 'Guest';
+	//TODO: Update progress with $state rune / db
 	let progress = {
 		html: 25,
 		css: 50,
@@ -69,7 +70,7 @@
 
 <main class="min-h-screen">
 	<section
-		class="grid h-screen max-h-[900px] grid-cols-1 items-center justify-center justify-items-stretch gap-8 p-10 lg:grid-cols-10"
+		class="mt-[-4rem] grid max-h-[900px] grid-cols-1 items-center justify-center justify-items-stretch gap-8 p-10 lg:grid-cols-10"
 	>
 		<!-- Welcome Message Column (30%) -->
 		<section class="lg:col-span-3">
@@ -141,7 +142,7 @@
 	</section>
 	<!-- Achievements Section -->
 
-	<section class="flex justify-center space-x-8 p-6">
+	<section class="mt-[-7rem] flex justify-center space-x-8 p-6">
 		<div class="card w-full max-w-3xl p-6 shadow">
 			<h2
 				class="mb-2 bg-gradient-to-br from-red-500 to-yellow-500 box-decoration-clone bg-clip-text text-center text-2xl font-semibold text-transparent"

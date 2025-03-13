@@ -50,6 +50,7 @@
 	},
 	"dependencies": {
 		"@auth/core": "^0.37.4",
+		"@auth/drizzle-adapter": "^1.8.0",
 		"@auth/sveltekit": "^1.7.4",
 		"@codemirror/basic-setup": "^0.20.0",
 		"@codesandbox/sandpack-react": "^2.19.10",
