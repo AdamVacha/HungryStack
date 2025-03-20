@@ -1,6 +1,7 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import BadgeDisplay from '$lib/components/BadgeDisplay.svelte';
 
 	let username = page?.data?.session?.user?.name ?? 'Guest';
 	//TODO: Update progress with $state rune / db
@@ -15,33 +16,7 @@
 		{ title: 'CSS Mastery', description: 'Completed CSS Animations' },
 		{ title: 'JavaScript Pro', description: 'Built your first async function' }
 	];
-	let badges = [
-		{
-			title: 'First Lesson Badge',
-			description: 'Completed your first lesson!',
-			image: '/badges/first-stack-badge.png'
-		},
-		{
-			title: 'Syntax Chef',
-			description: 'Wrote 10 correct code snippets!',
-			image: '/badges/syntax-chef-badge.png'
-		},
-		{
-			title: 'Daily Flipper',
-			description: 'Login for 5 consecutive days',
-			image: '/badges/daily-flipper-badge.png'
-		},
-		{
-			title: 'Late Night Coder',
-			description: 'Completed a lesson after midnight',
-			image: '/badges/late-night-coder-badge.png'
-		},
-		{
-			title: 'Syntax Chef',
-			description: 'Wrote 10 correct code snippets!',
-			image: '/badges/syntax-chef-badge.png'
-		}
-	];
+
 	let messages = {
 		default: `Welcome, ${username}!<br> Keep stacking your pancakes!`,
 		html: 'HTML is the backbone of web pages. It structures your content!',
@@ -143,20 +118,8 @@
 	<!-- Achievements Section -->
 
 	<section class="mt-[-7rem] flex justify-center space-x-8 p-6">
-		<div class="card w-full max-w-3xl p-6 shadow">
-			<h2
-				class="mb-2 bg-gradient-to-br from-red-500 to-yellow-500 box-decoration-clone bg-clip-text text-center text-2xl font-semibold text-transparent"
-			>
-				Your Badges
-			</h2>
-			<div class="flex snap-x snap-mandatory scroll-px-4 overflow-x-auto scroll-smooth p-4">
-				{#each badges as badge}
-					<div class="badge-container flex flex-col items-center">
-						<img src={badge.image} alt={badge.title} class="h-40" />
-					</div>
-				{/each}
-			</div>
-		</div>
+		<!-- Badge Display Component -->
+		<BadgeDisplay limit={5} />
 
 		<div class="card w-full max-w-3xl p-6 shadow">
 			<h2

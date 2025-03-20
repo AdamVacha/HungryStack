@@ -3,7 +3,7 @@
 	import { ParaglideJS } from '@inlang/paraglide-sveltekit';
 	import '../app.css';
 	import { AppShell, AppBar, LightSwitch } from '@skeletonlabs/skeleton';
-	import Footer from '../components/Footer.svelte';
+	import Footer from '../lib/components/Footer.svelte';
 	import { page } from '$app/state';
 	import { signOut } from '@auth/sveltekit/client';
 	import { computePosition, autoUpdate, offset, shift, flip, arrow } from '@floating-ui/dom';
@@ -63,6 +63,9 @@
 							<div class="grid grid-cols-1 gap-2">
 								<a href="/dashboard" id="will-close" class="block px-4 py-2 hover:bg-secondary-400"
 									>Dashboard</a
+								>
+								<a href="/badges" id="will-close" class="block px-4 py-2 hover:bg-secondary-400"
+									>Badges</a
 								>
 								<a href="/settings" id="will-close" class="block px-4 py-2 hover:bg-secondary-400"
 									>Settings</a
