@@ -10,16 +10,7 @@ import {
 	jsonb,
 	varchar
 } from 'drizzle-orm/pg-core';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
 import type { AdapterAccount } from '@auth/core/adapters';
-import { env } from '$env/dynamic/private';
-
-const dbUrl = env.DATABASE_URL;
-if (!dbUrl) throw new Error('DATABASE_URL is required');
-
-const client = postgres(dbUrl);
-export const db = drizzle(client);
 
 // Auth.js required tables
 export const users = pgTable('user', {
@@ -75,34 +66,31 @@ export const verificationTokens = pgTable(
 	})
 );
 
-// Learning paths and tiers
-export const learningPaths = pgTable('learning_paths', {
-	id: serial('path_id').primaryKey(),
+// Learning path
+export const subjects = pgTable('subjects', {
+	id: serial('subject_id').primaryKey(),
 	name: text('name').notNull(),
 	description: text('description'),
-	orderInCurriculum: integer('order_in_curriculum'),
-	requiredPoints: integer('required_points')
+	orderInCurriculum: integer('order_in_curriculum')
 });
 
-export const tiers = pgTable('tiers', {
-	id: serial('tier_id').primaryKey(),
-	pathId: integer('path_id').references(() => learningPaths.id, { onDelete: 'cascade' }),
+export const modules = pgTable('modules', {
+	id: serial('module_id').primaryKey(),
+	subjectId: integer('subject_id').references(() => subjects.id, { onDelete: 'cascade' }),
 	name: text('name').notNull(),
 	description: text('description'),
-	progressStart: integer('progress_start'),
-	progressEnd: integer('progress_end'),
-	badge: text('badge')
+	orderInSubject: integer('order_in_subject'),
+	isLocked: boolean('is_locked').default(true)
 });
 
 export const lessons = pgTable('lessons', {
 	id: serial('lesson_id').primaryKey(),
-	tierId: integer('tier_id').references(() => tiers.id, { onDelete: 'cascade' }),
+	moduleId: integer('module_id').references(() => modules.id, { onDelete: 'cascade' }),
 	title: text('title').notNull(),
 	content: text('content'),
-	orderInTier: integer('order_in_tier'),
-	estimatedTime: integer('estimated_time'),
-	pointsReward: integer('points_reward').default(10),
-	mascotMessage: text('mascot_message')
+	orderInModule: integer('order_in_module'),
+	nextLessonId: integer('next_lesson_id'),
+	prevLessonId: integer('prev_lesson_id')
 });
 
 // Student profiles and progress
@@ -155,7 +143,7 @@ export const submissions = pgTable('submissions', {
 	submittedAt: timestamp('submitted_at').defaultNow()
 });
 
-// Achievements
+// Achievements & Badges
 export const achievements = pgTable('achievements', {
 	id: serial('achievement_id').primaryKey(),
 	title: varchar('title', { length: 255 }),
@@ -201,7 +189,7 @@ export const quizQuestions = pgTable('quiz_questions', {
 });
 
 export const studentQuizAttempts = pgTable('student_quiz_attempts', {
-	id: serial('attempt_id').primaryKey(),
+	id: serial('quiz_attempt_id').primaryKey(),
 	studentId: text('student_id')
 		.notNull()
 		.references(() => users.id, { onDelete: 'cascade' }),
@@ -216,15 +204,15 @@ export const studentQuizAttempts = pgTable('student_quiz_attempts', {
 // Projects
 export const projects = pgTable('projects', {
 	id: serial('project_id').primaryKey(),
-	tierId: integer('tier_id').references(() => tiers.id, { onDelete: 'cascade' }),
+	lessonId: integer('lesson_id').references(() => lessons.id, { onDelete: 'cascade' }),
 	title: text('title').notNull(),
 	description: text('description'),
 	requirements: jsonb('requirements'),
 	rubric: jsonb('rubric')
 });
 
-export const studentProjects = pgTable('student_projects', {
-	id: serial('submission_id').primaryKey(),
+export const studentProjectAttempts = pgTable('student_projects', {
+	id: serial('project_attempt_id').primaryKey(),
 	studentId: text('student_id')
 		.notNull()
 		.references(() => users.id, { onDelete: 'cascade' }),

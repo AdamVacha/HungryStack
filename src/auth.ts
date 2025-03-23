@@ -4,7 +4,6 @@ import Google from '@auth/sveltekit/providers/google';
 import { GITHUB_ID, GITHUB_SECRET, GOOGLE_ID, GOOGLE_SECRET } from '$env/static/private';
 import { DrizzleAdapter } from '@auth/drizzle-adapter';
 import {
-	db,
 	users,
 	accounts,
 	sessions,
@@ -12,6 +11,7 @@ import {
 	studentProfiles
 } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
+import { db } from '$lib/server/db';
 
 export const {
 	handle: handleAuth,
