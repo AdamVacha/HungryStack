@@ -11,6 +11,7 @@ import {
 	varchar
 } from 'drizzle-orm/pg-core';
 import type { AdapterAccount } from '@auth/core/adapters';
+import { relations } from 'drizzle-orm';
 
 // Auth.js required tables
 export const users = pgTable('user', {
@@ -92,6 +93,17 @@ export const lessons = pgTable('lessons', {
 	nextLessonId: integer('next_lesson_id'),
 	prevLessonId: integer('prev_lesson_id')
 });
+
+export const subjectRelations = relations(subjects, ({ many }) => ({
+	modules: many(modules)
+}));
+
+export const moduleRelations = relations(modules, ({ one }) => ({
+	subject: one(subjects, {
+		fields: [modules.subjectId],
+		references: [subjects.id]
+	})
+}));
 
 // Student profiles and progress
 export const studentProfiles = pgTable('student_profiles', {
