@@ -15,7 +15,7 @@ importers:
         specifier: ^1.7.4
         version: 1.8.0
       '@auth/sveltekit':
-        specifier: ^1.7.4
+        specifier: ^1.8.0
         version: 1.8.0(@sveltejs/kit@2.17.3(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.20.5)(vite@6.2.0(@types/node@22.13.5)(jiti@1.21.7)(yaml@2.7.0)))(svelte@5.20.5)(vite@6.2.0(@types/node@22.13.5)(jiti@1.21.7)(yaml@2.7.0)))(svelte@5.20.5)
       '@codemirror/basic-setup':
         specifier: ^0.20.0
@@ -109,7 +109,7 @@ importers:
         specifier: ^16.4.7
         version: 16.4.7
       drizzle-kit:
-        specifier: ^0.22.0
+        specifier: ^0.22.8
         version: 0.22.8
       eslint:
         specifier: ^9.7.0

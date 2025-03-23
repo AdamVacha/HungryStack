@@ -1,11 +1,11 @@
 {
-  "id": "053edb3a-21c2-40d4-9810-2acb1ca2eb46",
-  "prevId": "0fe59a09-e2b2-49fa-b2d7-1bc650b060d4",
+  "id": "a7dfc219-16c4-4dbf-8b51-c20b30fd817b",
+  "prevId": "9238f241-5998-4872-b99a-3f9e2c6ebe95",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.accounts": {
-      "name": "accounts",
+    "public.account": {
+      "name": "account",
       "schema": "",
       "columns": {
         "userId": {
@@ -77,10 +77,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "accounts_userId_users_id_fk": {
-          "name": "accounts_userId_users_id_fk",
-          "tableFrom": "accounts",
-          "tableTo": "users",
+        "account_userId_user_id_fk": {
+          "name": "account_userId_user_id_fk",
+          "tableFrom": "account",
+          "tableTo": "user",
           "columnsFrom": [
             "userId"
           ],
@@ -92,8 +92,8 @@
         }
       },
       "compositePrimaryKeys": {
-        "accounts_provider_providerAccountId_pk": {
-          "name": "accounts_provider_providerAccountId_pk",
+        "account_provider_providerAccountId_pk": {
+          "name": "account_provider_providerAccountId_pk",
           "columns": [
             "provider",
             "providerAccountId"
@@ -201,50 +201,10 @@
           "columnsTo": [
             "lesson_id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "public.learning_paths": {
-      "name": "learning_paths",
-      "schema": "",
-      "columns": {
-        "path_id": {
-          "name": "path_id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "order_in_curriculum": {
-          "name": "order_in_curriculum",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "required_points": {
-          "name": "required_points",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
@@ -258,8 +218,8 @@
           "primaryKey": true,
           "notNull": true
         },
-        "tier_id": {
-          "name": "tier_id",
+        "module_id": {
+          "name": "module_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
@@ -276,45 +236,99 @@
           "primaryKey": false,
           "notNull": false
         },
-        "order_in_tier": {
-          "name": "order_in_tier",
+        "order_in_module": {
+          "name": "order_in_module",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
-        "estimated_time": {
-          "name": "estimated_time",
+        "next_lesson_id": {
+          "name": "next_lesson_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
-        "points_reward": {
-          "name": "points_reward",
+        "prev_lesson_id": {
+          "name": "prev_lesson_id",
           "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": 10
-        },
-        "mascot_message": {
-          "name": "mascot_message",
-          "type": "text",
           "primaryKey": false,
           "notNull": false
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "lessons_tier_id_tiers_tier_id_fk": {
-          "name": "lessons_tier_id_tiers_tier_id_fk",
+        "lessons_module_id_modules_module_id_fk": {
+          "name": "lessons_module_id_modules_module_id_fk",
           "tableFrom": "lessons",
-          "tableTo": "tiers",
+          "tableTo": "modules",
           "columnsFrom": [
-            "tier_id"
+            "module_id"
           ],
           "columnsTo": [
-            "tier_id"
+            "module_id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.modules": {
+      "name": "modules",
+      "schema": "",
+      "columns": {
+        "module_id": {
+          "name": "module_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "subject_id": {
+          "name": "subject_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "order_in_subject": {
+          "name": "order_in_subject",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_locked": {
+          "name": "is_locked",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "modules_subject_id_subjects_subject_id_fk": {
+          "name": "modules_subject_id_subjects_subject_id_fk",
+          "tableFrom": "modules",
+          "tableTo": "subjects",
+          "columnsFrom": [
+            "subject_id"
+          ],
+          "columnsTo": [
+            "subject_id"
+          ],
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -331,8 +345,8 @@
           "primaryKey": true,
           "notNull": true
         },
-        "tier_id": {
-          "name": "tier_id",
+        "lesson_id": {
+          "name": "lesson_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
@@ -364,17 +378,17 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "projects_tier_id_tiers_tier_id_fk": {
-          "name": "projects_tier_id_tiers_tier_id_fk",
+        "projects_lesson_id_lessons_lesson_id_fk": {
+          "name": "projects_lesson_id_lessons_lesson_id_fk",
           "tableFrom": "projects",
-          "tableTo": "tiers",
+          "tableTo": "lessons",
           "columnsFrom": [
-            "tier_id"
+            "lesson_id"
           ],
           "columnsTo": [
-            "tier_id"
+            "lesson_id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -441,7 +455,7 @@
           "columnsTo": [
             "quiz_id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -501,19 +515,19 @@
           "columnsTo": [
             "lesson_id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "public.sessions": {
-      "name": "sessions",
+    "public.session": {
+      "name": "session",
       "schema": "",
       "columns": {
-        "id": {
-          "name": "id",
+        "sessionToken": {
+          "name": "sessionToken",
           "type": "text",
           "primaryKey": true,
           "notNull": true
@@ -533,10 +547,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "sessions_userId_users_id_fk": {
-          "name": "sessions_userId_users_id_fk",
-          "tableFrom": "sessions",
-          "tableTo": "users",
+        "session_userId_user_id_fk": {
+          "name": "session_userId_user_id_fk",
+          "tableFrom": "session",
+          "tableTo": "user",
           "columnsFrom": [
             "userId"
           ],
@@ -558,13 +572,13 @@
           "name": "student_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "achievement_id": {
           "name": "achievement_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "earned_at": {
           "name": "earned_at",
@@ -576,17 +590,17 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "student_achievements_student_id_users_id_fk": {
-          "name": "student_achievements_student_id_users_id_fk",
+        "student_achievements_student_id_user_id_fk": {
+          "name": "student_achievements_student_id_user_id_fk",
           "tableFrom": "student_achievements",
-          "tableTo": "users",
+          "tableTo": "user",
           "columnsFrom": [
             "student_id"
           ],
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "student_achievements_achievement_id_achievements_achievement_id_fk": {
@@ -599,7 +613,7 @@
           "columnsTo": [
             "achievement_id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -661,17 +675,17 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "student_profiles_student_id_users_id_fk": {
-          "name": "student_profiles_student_id_users_id_fk",
+        "student_profiles_student_id_user_id_fk": {
+          "name": "student_profiles_student_id_user_id_fk",
           "tableFrom": "student_profiles",
-          "tableTo": "users",
+          "tableTo": "user",
           "columnsFrom": [
             "student_id"
           ],
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -686,13 +700,13 @@
           "name": "student_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "lesson_id": {
           "name": "lesson_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "completed_at": {
           "name": "completed_at",
@@ -716,17 +730,17 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "student_progress_student_id_users_id_fk": {
-          "name": "student_progress_student_id_users_id_fk",
+        "student_progress_student_id_user_id_fk": {
+          "name": "student_progress_student_id_user_id_fk",
           "tableFrom": "student_progress",
-          "tableTo": "users",
+          "tableTo": "user",
           "columnsFrom": [
             "student_id"
           ],
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "student_progress_lesson_id_lessons_lesson_id_fk": {
@@ -739,7 +753,7 @@
           "columnsTo": [
             "lesson_id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -758,8 +772,8 @@
       "name": "student_projects",
       "schema": "",
       "columns": {
-        "submission_id": {
-          "name": "submission_id",
+        "project_attempt_id": {
+          "name": "project_attempt_id",
           "type": "serial",
           "primaryKey": true,
           "notNull": true
@@ -768,13 +782,13 @@
           "name": "student_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "project_id": {
           "name": "project_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "repository_url": {
           "name": "repository_url",
@@ -810,17 +824,17 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "student_projects_student_id_users_id_fk": {
-          "name": "student_projects_student_id_users_id_fk",
+        "student_projects_student_id_user_id_fk": {
+          "name": "student_projects_student_id_user_id_fk",
           "tableFrom": "student_projects",
-          "tableTo": "users",
+          "tableTo": "user",
           "columnsFrom": [
             "student_id"
           ],
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "student_projects_project_id_projects_project_id_fk": {
@@ -833,7 +847,7 @@
           "columnsTo": [
             "project_id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -844,8 +858,8 @@
       "name": "student_quiz_attempts",
       "schema": "",
       "columns": {
-        "attempt_id": {
-          "name": "attempt_id",
+        "quiz_attempt_id": {
+          "name": "quiz_attempt_id",
           "type": "serial",
           "primaryKey": true,
           "notNull": true
@@ -854,13 +868,13 @@
           "name": "student_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "quiz_id": {
           "name": "quiz_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "score": {
           "name": "score",
@@ -884,17 +898,17 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "student_quiz_attempts_student_id_users_id_fk": {
-          "name": "student_quiz_attempts_student_id_users_id_fk",
+        "student_quiz_attempts_student_id_user_id_fk": {
+          "name": "student_quiz_attempts_student_id_user_id_fk",
           "tableFrom": "student_quiz_attempts",
-          "tableTo": "users",
+          "tableTo": "user",
           "columnsFrom": [
             "student_id"
           ],
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "student_quiz_attempts_quiz_id_quizzes_quiz_id_fk": {
@@ -907,10 +921,44 @@
           "columnsTo": [
             "quiz_id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.subjects": {
+      "name": "subjects",
+      "schema": "",
+      "columns": {
+        "subject_id": {
+          "name": "subject_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "order_in_curriculum": {
+          "name": "order_in_curriculum",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
@@ -958,17 +1006,17 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "submissions_student_id_users_id_fk": {
-          "name": "submissions_student_id_users_id_fk",
+        "submissions_student_id_user_id_fk": {
+          "name": "submissions_student_id_user_id_fk",
           "tableFrom": "submissions",
-          "tableTo": "users",
+          "tableTo": "user",
           "columnsFrom": [
             "student_id"
           ],
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "submissions_exercise_id_exercises_exercise_id_fk": {
@@ -981,81 +1029,15 @@
           "columnsTo": [
             "exercise_id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "public.tiers": {
-      "name": "tiers",
-      "schema": "",
-      "columns": {
-        "tier_id": {
-          "name": "tier_id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "path_id": {
-          "name": "path_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "progress_start": {
-          "name": "progress_start",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "progress_end": {
-          "name": "progress_end",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "badge": {
-          "name": "badge",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "tiers_path_id_learning_paths_path_id_fk": {
-          "name": "tiers_path_id_learning_paths_path_id_fk",
-          "tableFrom": "tiers",
-          "tableTo": "learning_paths",
-          "columnsFrom": [
-            "path_id"
-          ],
-          "columnsTo": [
-            "path_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "public.users": {
-      "name": "users",
+    "public.user": {
+      "name": "user",
       "schema": "",
       "columns": {
         "id": {
@@ -1106,16 +1088,24 @@
           "type": "boolean",
           "primaryKey": false,
           "notNull": false,
-          "default": true
+          "default": false
         }
       },
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {
+        "user_email_unique": {
+          "name": "user_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      }
     },
-    "public.verification_tokens": {
-      "name": "verification_tokens",
+    "public.verificationToken": {
+      "name": "verificationToken",
       "schema": "",
       "columns": {
         "identifier": {
@@ -1140,8 +1130,8 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {
-        "verification_tokens_identifier_token_pk": {
-          "name": "verification_tokens_identifier_token_pk",
+        "verificationToken_identifier_token_pk": {
+          "name": "verificationToken_identifier_token_pk",
           "columns": [
             "identifier",
             "token"
