@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { signIn } from '@auth/sveltekit/client';
+	import { SignIn } from '@auth/sveltekit/components';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { DotLottieSvelte } from '@lottiefiles/dotlottie-svelte';
@@ -42,6 +43,29 @@
 				<span><img src="/images/github.svg" alt="GitHub" class="mr-3 h-6 w-6" /></span>
 				<span>Continue with GitHub</span>
 			</button>
+		</section>
+		<section class="space-y-4">
+			<!-- Google Authentication - Using the SignIn component -->
+			<SignIn provider="google" callbackUrl="/dashboard">
+				<div
+					slot="submitButton"
+					class="btn flex w-full items-center justify-center bg-red-500 py-3 text-white"
+				>
+					<span><img src="/images/google.svg" alt="Google" class="mr-3 h-6 w-6" /></span>
+					<span>Continue with Google</span>
+				</div>
+			</SignIn>
+
+			<!-- GitHub Authentication - Using the SignIn component -->
+			<SignIn provider="github" callbackUrl="/dashboard">
+				<div
+					slot="submitButton"
+					class="btn flex w-full items-center justify-center bg-gray-800 py-3 text-white"
+				>
+					<span><img src="/images/github.svg" alt="GitHub" class="mr-3 h-6 w-6" /></span>
+					<span>Continue with GitHub</span>
+				</div>
+			</SignIn>
 		</section>
 	</div>
 </div>
