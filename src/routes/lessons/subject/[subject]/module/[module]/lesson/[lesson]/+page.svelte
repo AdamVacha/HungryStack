@@ -68,7 +68,7 @@
 
 				// Check if module was completed
 				if (result.moduleCompleted && module?.id) {
-					const moduleBadges = awardModuleCompletionBadges(module.id.toString());
+					const moduleBadges = await awardModuleCompletionBadges(module.id.toString());
 					if (moduleBadges.length > 0) {
 						showMultipleBadgeNotifications(moduleBadges);
 					}
