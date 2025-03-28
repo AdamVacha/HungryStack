@@ -11,7 +11,7 @@ import {
 	varchar
 } from 'drizzle-orm/pg-core';
 import type { AdapterAccount } from '@auth/core/adapters';
-import { relations } from 'drizzle-orm';
+import { relations, type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
 
 // Auth.js required tables
 export const users = pgTable('user', {
@@ -239,3 +239,14 @@ export const studentProjectAttempts = pgTable('student_projects', {
 	feedback: text('feedback'),
 	submittedAt: timestamp('submitted_at').defaultNow()
 });
+
+// Type definitions
+// For reading data (select operations)
+export type subjects = InferSelectModel<typeof subjects>;
+export type modules = InferSelectModel<typeof modules>;
+export type lessons = InferSelectModel<typeof lessons>;
+export type studentProgress = InferSelectModel<typeof studentProgress>;
+
+// For inserting data (insert operations)
+export type insertLesson = InferInsertModel<typeof lessons>;
+export type insertStudentProgress = InferInsertModel<typeof studentProgress>;
