@@ -22,7 +22,7 @@
 			Your Badges
 		</h2>
 		<div class="variant-filled-primary badge">
-			{$badgeProgress}% complete
+			{$badgeProgress.percentage}% complete
 		</div>
 	</header>
 
@@ -61,7 +61,7 @@
 	<!-- Button to view all badges -->
 	<footer class="mt-4 flex justify-center">
 		<button class="variant-filled-primary btn" onclick={navigateToBadgesPage}>
-			{displayBadges.length > 0 ? 'View All Badges' : 'Unlock Your First Badge'}
+			View All Badges
 		</button>
 	</footer>
 </div>
