@@ -11,6 +11,14 @@
 	import { storePopup } from '@skeletonlabs/skeleton';
 	import type { PopupSettings } from '@skeletonlabs/skeleton';
 	storePopup.set({ computePosition, autoUpdate, offset, shift, flip, arrow });
+	import { initBadgeStore } from '$lib/badges/badgeStore';
+	import { onMount } from 'svelte';
+
+	onMount(() => {
+		if (page.data.session?.user) {
+			initBadgeStore();
+		}
+	});
 
 	let { children } = $props();
 
@@ -29,8 +37,9 @@
 			<!-- App Bar -->
 			<AppBar class="px-8 py-4">
 				<svelte:fragment slot="lead">
+					<!-- if logged in go to dashboard, else go to home -->
 					<a
-						href="/"
+						href={page.data.session ? '/dashboard' : '/'}
 						class="ml-8 text-2xl font-bold text-tertiary-600 transition-colors duration-200 hover:text-primary-500 dark:text-primary-500 dark:hover:text-tertiary-400"
 						><span class="logo-icon">🥞</span> Hungry Stack</a
 					>

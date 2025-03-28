@@ -158,10 +158,12 @@ export const submissions = pgTable('submissions', {
 // Achievements & Badges
 export const achievements = pgTable('achievements', {
 	id: serial('achievement_id').primaryKey(),
+	badgeId: text('badge_id').notNull().unique(), // Add this to store the original badge ID (e.g., 'html-rookie')
 	title: varchar('title', { length: 255 }),
 	description: text('description'),
 	requiredPoints: integer('required_points'),
-	badgeIcon: varchar('badge_icon', { length: 255 })
+	badgeIcon: varchar('badge_icon', { length: 255 }),
+	category: varchar('category', { length: 50 })
 });
 
 export const studentAchievements = pgTable(

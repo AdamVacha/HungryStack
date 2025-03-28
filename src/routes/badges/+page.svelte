@@ -59,7 +59,7 @@
 					<div class="text-center">
 						<div class="inline-block">
 							<ProgressRadial
-								value={$badgeProgress}
+								value={$badgeProgress.percentage}
 								width="w-16"
 								meter="stroke-primary-500"
 								track="stroke-primary-200"

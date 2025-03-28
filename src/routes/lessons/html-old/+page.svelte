@@ -2,6 +2,7 @@
 	import { awardModuleCompletionBadges } from '$lib/badges/badgeStore';
 	import { showMultipleBadgeNotifications } from '$lib/badges/badgeNotification';
 	import BadgeNotification from '../../../lib/components/BadgeNotification.svelte';
+	import { page } from '$app/state';
 
 	// Module State Management
 	let isModulesPanelOpen = $state(true);
@@ -127,7 +128,7 @@
 	let iframeSrc = $derived(`data:text/html;charset=utf-8,${encodeURIComponent(code)}`);
 
 	// module completion
-	function checkModuleCompletion(moduleId: string) {
+	async function checkModuleCompletion(moduleId: string) {
 		const module = modules.find((m) => m.id === moduleId);
 
 		// if module not found, then return
@@ -143,9 +144,9 @@
 		moduleCompletions[moduleId] = allCompleted;
 
 		// module completed? unlock next module and award badges
-		if (allCompleted) {
-			// award badges for module completion
-			const earnedBadges = awardModuleCompletionBadges(moduleId);
+		if (allCompleted && page.data.session?.user) {
+			// award badges for module completion - now async
+			const earnedBadges = await awardModuleCompletionBadges(moduleId);
 
 			// show notifications if badges were earned
 			if (earnedBadges.length > 0) {
@@ -177,26 +178,29 @@
 	}
 
 	// mark current lesson as completed
-	function markLessonComplete() {
+	async function markLessonComplete() {
 		// if already completed, no need to do anything
 		if (lessonCompletions[currentLesson.id]) return;
 
 		// mark as completed
 		lessonCompletions[currentLesson.id] = true;
 
+		// only proceed with badge awarding if user is logged in
+		if (!page.data.session?.user) return;
+
 		// check if this is the first completed lesson
 		const isFirstLesson = Object.values(lessonCompletions).filter(Boolean).length === 1;
 
 		// award first lesson badge if applicable
 		if (isFirstLesson) {
-			const firstBiteBadge = awardModuleCompletionBadges('first-lesson');
+			const firstBiteBadge = await awardModuleCompletionBadges('first-lesson');
 			if (firstBiteBadge.length > 0) {
 				showMultipleBadgeNotifications(firstBiteBadge);
 			}
 		}
 
 		// check for module completion
-		checkModuleCompletion(currentModule.id);
+		await checkModuleCompletion(currentModule.id);
 	}
 
 	// unlock next module
@@ -210,8 +214,8 @@
 		isModulesPanelOpen = !isModulesPanelOpen;
 	}
 
-	function goToNextLesson() {
-		markLessonComplete();
+	async function goToNextLesson() {
+		await markLessonComplete();
 
 		if (currentLesson.next) {
 			const nextLessonInModule = currentModule.lessons.find((l) => l.id === currentLesson.next);
@@ -253,7 +257,6 @@
 </script>
 
 <main class="flex min-h-screen w-full flex-col overflow-y-auto p-6 lg:flex-row">
-	
 	<BadgeNotification />
 
 	<!-- Collapsible Modules Panel -->
