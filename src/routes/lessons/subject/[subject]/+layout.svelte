@@ -4,6 +4,6 @@
 	let { children }: LayoutProps = $props();
 </script>
 
-<div class="flex gap-8">
+<div class="w-full min-h-screen">
 	{@render children?.()}
 </div>

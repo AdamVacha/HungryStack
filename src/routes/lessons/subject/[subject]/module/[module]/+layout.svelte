@@ -8,6 +8,7 @@
 	let lessonList = $derived(data?.lessons || []);
 	let progress = $derived(data?.currentProgress);
 	let currentLessonId = $derived(data?.currentLessonId ? +data.currentLessonId : 0);
+	let modules = $derived(data?.allModules || []);
 
 	// Track if module panel is open
 	let isModulesPanelOpen = $state(true);
@@ -21,62 +22,50 @@
 <div class="flex h-full flex-row gap-4 p-4">
 	<!-- Collapsible Modules Panel -->
 	<div
-		class="relative transition-all duration-300"
+		class="sidebar-container transition-all duration-300"
 		class:w-64={isModulesPanelOpen}
 		class:w-0={!isModulesPanelOpen}
 	>
-		<!-- Module panel content -->
-		<div
-			class="absolute h-full overflow-auto bg-surface-100 dark:bg-surface-800"
-			class:w-64={isModulesPanelOpen}
-			class:w-0={!isModulesPanelOpen}
-		>
-			{#if module && subject}
-				<ModuleSidebar {subject} {module} lessons={lessonList} {currentLessonId} {progress} />
-			{:else}
-				<div class="p-4 text-center">Loading module...</div>
-			{/if}
-		</div>
-
-		<!-- Toggle Module Panel Button -->
-		<button
-			onclick={toggleModulesPanel}
-			class="absolute -right-0 top-4 z-10 rounded-r bg-tertiary-500 p-1 text-white hover:bg-tertiary-600"
-		>
+		<div class="relative h-full" class:w-64={isModulesPanelOpen} class:w-0={!isModulesPanelOpen}>
 			{#if isModulesPanelOpen}
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="20"
-					height="20"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				>
-					<path d="m15 18-6-6 6-6" />
-				</svg>
-			{:else}
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="20"
-					height="20"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				>
-					<path d="m9 18 6-6-6-6" />
-				</svg>
+			<ModuleSidebar
+			{subject}
+			{modules}
+			currentModuleId={module?.id || 0}
+			currentLessonId={currentLessonId}
+			lessons={lessonList}
+			{progress}
+		  />
 			{/if}
-		</button>
+
+			<!-- Toggle Button -->
+			<button
+				onclick={toggleModulesPanel}
+				class="absolute -right-4 top-4 z-10 rounded-full bg-tertiary-500 p-2 shadow-lg transition-colors hover:bg-tertiary-600"
+			>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="16"
+					height="16"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
+					{#if isModulesPanelOpen}
+						<path d="M15 18l-6-6 6-6" />
+					{:else}
+						<path d="M9 18l6-6-6-6" />
+					{/if}
+				</svg>
+			</button>
+		</div>
 	</div>
 
 	<!-- Main Content Area -->
-	<div class="flex-1 rounded-lg border border-solid p-4">
+	<div class="flex-1 rounded-lg border border-solid">
 		{@render children?.()}
 	</div>
 </div>

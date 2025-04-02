@@ -5,13 +5,15 @@ import { eq } from 'drizzle-orm';
 import { lessons, studentProgress } from '$lib/server/db/schema';
 
 export const load: LayoutServerLoad = async ({ params, parent, locals }) => {
-	const { module: moduleId, lesson: lessonId } = params;
-	const { subject } = await parent();
-	const module = subject.modules.find((m) => m.id === +moduleId);
-
-	if (!module) {
+    const { module: moduleId, lesson: lessonId } = params;
+    const { subject } = await parent();
+    
+    const allModules = subject.modules || [];
+    
+    const module = allModules.find((m) => m.id === +moduleId);
+    if (!module) {
 		return error(404, 'Module not found');
-	}
+    }
 
 	// fetch lessons
 	const moduleLessons = await db.query.lessons.findMany({
@@ -38,6 +40,7 @@ export const load: LayoutServerLoad = async ({ params, parent, locals }) => {
 
 	return {
 		module,
+		allModules,
 		lessons: moduleLessons,
 		currentProgress,
 		currentLessonId: lessonId
