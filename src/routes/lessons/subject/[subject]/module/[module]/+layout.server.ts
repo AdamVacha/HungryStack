@@ -7,15 +7,16 @@ import { lessons, studentProgress } from '$lib/server/db/schema';
 export const load: LayoutServerLoad = async ({ params, parent, locals }) => {
 	const { module: moduleId, lesson: lessonId } = params;
 	const { subject } = await parent();
-	const module = subject.modules.find((m) => m.id === +moduleId);
 
+	const allModules = subject.modules || [];
+
+	const module = allModules.find((m) => m.id === +moduleId);
 	if (!module) {
 		return error(404, 'Module not found');
 	}
 
 	// fetch lessons
-	const moduleLessons = await db.query.lessons.findMany({
-		where: eq(lessons.moduleId, +moduleId),
+	const allLessons = await db.query.lessons.findMany({
 		orderBy: lessons.orderInModule
 	});
 
@@ -38,7 +39,8 @@ export const load: LayoutServerLoad = async ({ params, parent, locals }) => {
 
 	return {
 		module,
-		lessons: moduleLessons,
+		allModules,
+		lessons: allLessons, 
 		currentProgress,
 		currentLessonId: lessonId
 	};
