@@ -193,7 +193,7 @@
 
 		// award first lesson badge if applicable
 		if (isFirstLesson) {
-			const firstBiteBadge = await awardModuleCompletionBadges('first-lesson');
+			const firstBiteBadge = await awardModuleCompletionBadges('first-bite');
 			if (firstBiteBadge.length > 0) {
 				showMultipleBadgeNotifications(firstBiteBadge);
 			}

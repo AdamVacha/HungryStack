@@ -28,14 +28,14 @@
 	>
 		<div class="relative h-full" class:w-64={isModulesPanelOpen} class:w-0={!isModulesPanelOpen}>
 			{#if isModulesPanelOpen}
-			<ModuleSidebar
-			{subject}
-			{modules}
-			currentModuleId={module?.id || 0}
-			currentLessonId={currentLessonId}
-			lessons={lessonList}
-			{progress}
-		  />
+				<ModuleSidebar
+					{subject}
+					{modules}
+					currentModuleId={module?.id || 0}
+					{currentLessonId}
+					lessons={lessonList}
+					{progress}
+				/>
 			{/if}
 
 			<!-- Toggle Button -->

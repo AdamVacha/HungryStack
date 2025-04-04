@@ -27,8 +27,8 @@
 	let isCodePanelHorizontal = $state(true);
 
 	// Progress tracking
-	let isCompleted = $state(data?.progress?.completedAt !== null);
-	let timeSpent = $state(0);
+	let isCompleted = $state(data?.progress ? data.progress.completedAt !== null : false);
+		let timeSpent = $state(0);
 	let timeTracker: number | undefined;
 
 	// Start tracking time spent on the lesson
@@ -81,11 +81,14 @@
 
 	// Navigation functions
 	async function goToNextLesson() {
-		await markLessonComplete();
-		if (lesson?.nextLessonId && subject?.id && module?.id) {
-			window.location.href = `/lessons/subject/${subject.id}/module/${module.id}/lesson/${lesson.nextLessonId}`;
-		}
-	}
+    await markLessonComplete();
+    
+    if (lesson?.nextLessonId && subject?.id) {
+        // Use the pre-loaded module ID for the next lesson
+        const moduleId = data.nextLessonModule || module.id;
+        window.location.href = `/lessons/subject/${subject.id}/module/${moduleId}/lesson/${lesson.nextLessonId}`;
+    }
+}
 
 	async function goToPreviousLesson() {
 		if (lesson?.prevLessonId && subject?.id && module?.id) {
@@ -196,7 +199,7 @@
 		</div>
 
 		<button
-			class="flex items-center gap-2 rounded-lg bg-tertiary-500 px-6 text-white py-3 transition-colors hover:bg-tertiary-400"
+			class="flex items-center gap-2 rounded-lg bg-tertiary-500 px-6 py-3 text-white transition-colors hover:bg-tertiary-400"
 			onclick={goToNextLesson}
 			disabled={!lesson?.nextLessonId}
 			class:opacity-50={!lesson?.nextLessonId}

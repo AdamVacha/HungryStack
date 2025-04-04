@@ -35,14 +35,7 @@
 
 	// Toggle module expansion
 	function toggleModule(moduleId: number) {
-		if (isModuleLocked(moduleId)) return;
 		expandedModules[moduleId] = !expandedModules[moduleId];
-	}
-
-	// Check if a module is locked
-	function isModuleLocked(moduleId: number) {
-		const module = modules.find((m) => m.id === moduleId);
-		return module?.isLocked ?? false;
 	}
 
 	// Get lessons for a specific module
@@ -54,7 +47,8 @@
 
 	// Check if a lesson is completed
 	function isLessonCompleted(lessonId: number) {
-		return progress[lessonId]?.completedAt !== null;
+		// Explicitly check if progress entry exists AND its completedAt is not null
+		return progress[lessonId] != null && progress[lessonId].completedAt !== null;
 	}
 </script>
 
@@ -68,54 +62,33 @@
 				<li class="rounded-lg bg-surface-200 dark:bg-surface-700">
 					<!-- Module header -->
 					<button
-						class="flex w-full cursor-pointer items-center justify-between rounded-t-lg p-2 text-left {isModuleLocked(
-							module.id
-						)
-							? 'bg-gray-400 dark:bg-gray-600'
-							: module.id === currentModuleId
-								? 'bg-secondary-400 dark:bg-secondary-500'
-								: 'bg-tertiary-500 dark:bg-tertiary-700'}"
+						class="flex w-full cursor-pointer items-center justify-between rounded-t-lg p-2 text-left
+						{module.id === currentModuleId
+							? 'bg-secondary-400 dark:bg-secondary-500'
+							: 'bg-tertiary-500 dark:bg-tertiary-700'}"
 						onclick={() => toggleModule(module.id)}
-						disabled={isModuleLocked(module.id)}
 						aria-expanded={expandedModules[module.id]}
 					>
 						<span class="font-semibold">{module.name || 'Module'}</span>
 						<div class="flex items-center">
-							{#if isModuleLocked(module.id)}
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									width="16"
-									height="16"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-								>
-									<rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-									<path d="M7 11V7a5 5 0 0 1 10 0v4" />
-								</svg>
-							{:else}
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									width="16"
-									height="16"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-								>
-									<path d={expandedModules[module.id] ? 'M18 15l-6-6-6 6' : 'M6 9l6 6 6-6'} />
-								</svg>
-							{/if}
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
+								<path d={expandedModules[module.id] ? 'M18 15l-6-6-6 6' : 'M6 9l6 6 6-6'} />
+							</svg>
 						</div>
 					</button>
 
 					<!-- Lessons within module -->
-					{#if expandedModules[module.id] && !isModuleLocked(module.id)}
+					{#if expandedModules[module.id]}
 						{@const moduleLessons = getLessonsForModule(module.id)}
 
 						{#if moduleLessons.length > 0}
