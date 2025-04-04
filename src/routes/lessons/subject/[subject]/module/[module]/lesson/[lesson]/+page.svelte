@@ -23,12 +23,13 @@
 		}
 	});
 
-	let iframeSrc = $derived(`data:text/html;charset=utf-8,${encodeURIComponent(code)}`);
+	let processedCode = $derived(code.replace(/\\n/g, '\n'));
+	let iframeSrc = $derived(`data:text/html;charset=utf-8,${encodeURIComponent(processedCode)}`);
 	let isCodePanelHorizontal = $state(true);
 
 	// Progress tracking
 	let isCompleted = $state(data?.progress ? data.progress.completedAt !== null : false);
-		let timeSpent = $state(0);
+	let timeSpent = $state(0);
 	let timeTracker: number | undefined;
 
 	// Start tracking time spent on the lesson
@@ -81,14 +82,14 @@
 
 	// Navigation functions
 	async function goToNextLesson() {
-    await markLessonComplete();
-    
-    if (lesson?.nextLessonId && subject?.id) {
-        // Use the pre-loaded module ID for the next lesson
-        const moduleId = data.nextLessonModule || module.id;
-        window.location.href = `/lessons/subject/${subject.id}/module/${moduleId}/lesson/${lesson.nextLessonId}`;
-    }
-}
+		await markLessonComplete();
+
+		if (lesson?.nextLessonId && subject?.id) {
+			// Use the pre-loaded module ID for the next lesson
+			const moduleId = data.nextLessonModule || module.id;
+			window.location.href = `/lessons/subject/${subject.id}/module/${moduleId}/lesson/${lesson.nextLessonId}`;
+		}
+	}
 
 	async function goToPreviousLesson() {
 		if (lesson?.prevLessonId && subject?.id && module?.id) {

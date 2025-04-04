@@ -15,6 +15,13 @@
       "when": 1742688084981,
       "tag": "0001_eager_katie_power",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1743436405394,
+      "tag": "0002_flashy_mad_thinker",
+      "breakpoints": true
     }
   ]
 }
