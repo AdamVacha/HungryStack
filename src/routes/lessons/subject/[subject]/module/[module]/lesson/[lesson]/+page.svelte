@@ -45,7 +45,6 @@
 	$effect(() => {
 		if (lesson?.content) {
 			code = lesson.content;
-
 			updateEditorContent(lesson.content);
 		}
 	});
