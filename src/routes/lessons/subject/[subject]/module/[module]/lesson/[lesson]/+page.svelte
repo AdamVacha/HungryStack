@@ -5,6 +5,26 @@
 	import BadgeNotification from '$lib/components/BadgeNotification.svelte';
 	import { awardModuleCompletionBadges } from '$lib/badges/badgeStore';
 
+	// CodeMirror imports
+	import { basicSetup } from 'codemirror';
+	import { EditorView, keymap } from '@codemirror/view';
+	import { defaultKeymap, indentWithTab } from '@codemirror/commands';
+	import { javascript } from '@codemirror/lang-javascript';
+	import { html } from '@codemirror/lang-html';
+	import { css } from '@codemirror/lang-css';
+	import { sql } from '@codemirror/lang-sql';
+	import { oneDark } from '@codemirror/theme-one-dark';
+
+	// Prettier imports
+	import * as prettier from 'prettier/standalone';
+	import * as parserHTML from 'prettier/parser-html';
+	import * as parserCSS from 'prettier/parser-postcss';
+	import * as parserBabel from 'prettier/parser-babel';
+
+	// Sandpack imports / Wrapper exports
+	import { Sandpack } from '@codesandbox/sandpack-react';
+	import type { SandpackProps } from '@codesandbox/sandpack-react';
+
 	// Get page data from loader
 	let { data } = $props<{ data: PageData }>();
 
@@ -13,19 +33,117 @@
 	let module = $derived(data?.module);
 	let subject = $derived(data?.subject);
 
+	// CodeMirror editor state
+	let editorContainer: HTMLDivElement | null = null;
+	let editorView: EditorView;
+
 	// Local state for editor - initialize with a default value first
 	let code = $state('');
+	let isCodePanelHorizontal = $state(true);
 
 	// Set initial code value after lesson data is available
 	$effect(() => {
 		if (lesson?.content) {
 			code = lesson.content;
+
+			updateEditorContent(lesson.content);
 		}
 	});
 
+	// Determine language extensions based on subject
+	function getLanguageExtension() {
+		switch (subject?.id) {
+			case 1:
+				return html(); // HTML
+			case 2:
+				return css(); // CSS
+			case 3:
+				return javascript(); // JavaScript
+			case 4:
+				return sql(); // SQL
+			default:
+				return javascript();
+		}
+	}
+
+	// Prettier formatting
+	// TODO finish implementing this later or just adjust content in db
+	function prettierCode(code: string, language: string) {
+		try {
+			// Select appropriate parser based on language
+			let parser;
+			switch (language) {
+				case 'html':
+					parser = 'html';
+					break;
+				case 'css':
+					parser = 'css';
+					break;
+				case 'javascript':
+				default:
+					parser = 'babel';
+			}
+
+			return prettier.format(code, {
+				parser,
+				plugins: [parserHTML, parserCSS, parserBabel],
+				tabWidth: 2,
+				useTabs: false,
+				semi: true,
+				singleQuote: true,
+				trailingComma: 'es5',
+				bracketSpacing: true
+			});
+		} catch (error) {
+			console.error('Prettier formatting error:', error);
+			return code; // Return original code if formatting fails
+		}
+	}
+
+	// Create CodeMirror editor
+	function createCodeMirrorEditor() {
+		// Remove existing editor if it exists
+		if (editorView) {
+			editorView.destroy();
+		}
+
+		// Configure codemirror editor with appropriate language
+		editorView = new EditorView({
+			doc: code,
+			extensions: [
+				basicSetup,
+				EditorView.lineWrapping,
+				keymap.of([...defaultKeymap, indentWithTab]),
+				getLanguageExtension(),
+				oneDark,
+				EditorView.updateListener.of((update) => {
+					if (update.docChanged) {
+						code = update.state.doc.toString();
+						updateIframePreview();
+					}
+				})
+			],
+			parent: editorContainer!
+		});
+	}
+
+	// Update codemirror editor content programmatically
+	function updateEditorContent(newContent: string) {
+		if (editorView) {
+			const transaction = editorView.state.update({
+				changes: {
+					from: 0,
+					to: editorView.state.doc.length,
+					insert: newContent
+				}
+			});
+			editorView.dispatch(transaction);
+		}
+	}
+
+	// Code Processing
 	let processedCode = $derived(code.replace(/\\n/g, '\n'));
 	let iframeSrc = $derived(`data:text/html;charset=utf-8,${encodeURIComponent(processedCode)}`);
-	let isCodePanelHorizontal = $state(true);
 
 	// Progress tracking
 	let isCompleted = $state(data?.progress ? data.progress.completedAt !== null : false);
@@ -34,11 +152,16 @@
 
 	// Start tracking time spent on the lesson
 	onMount(() => {
+		createCodeMirrorEditor();
+
 		timeTracker = window.setInterval(() => {
 			timeSpent += 1;
 		}, 1000);
 
 		return () => {
+			if (editorView) {
+				editorView.destroy();
+			}
 			if (timeTracker) clearInterval(timeTracker);
 		};
 	});
@@ -80,6 +203,14 @@
 		}
 	}
 
+	// Update iframe preview
+	function updateIframePreview() {
+		const iframe = document.getElementById('live-preview-iframe') as HTMLIFrameElement;
+		if (iframe) {
+			iframe.src = `data:text/html;charset=utf-8,${encodeURIComponent(processedCode)}`;
+		}
+	}
+
 	// Navigation functions
 	async function goToNextLesson() {
 		await markLessonComplete();
@@ -108,7 +239,7 @@
 		<p>Modify the code below and see the result in real time!</p>
 	</header>
 
-	<!-- Code Editor and Preview Container -->
+	<!-- Code Editor and Preview -->
 	<div
 		class="grid gap-6"
 		class:grid-cols-2={isCodePanelHorizontal}
@@ -146,10 +277,8 @@
 					</svg>
 				</button>
 			</header>
-			<textarea
-				class="h-80 w-full resize-none p-4 font-mono text-sm focus:outline-none dark:bg-gray-800"
-				bind:value={code}
-			></textarea>
+
+			<div bind:this={editorContainer} class="h-96 w-full overflow-auto"></div>
 		</div>
 
 		<!-- Live Preview -->
@@ -157,8 +286,13 @@
 			<header class="bg-surface-100 px-4 py-2 dark:bg-gray-700">
 				<h2 class="text-lg font-medium">Live Preview</h2>
 			</header>
-			<div class="h-80 bg-white">
-				<iframe src={iframeSrc} class="h-full w-full border-0" title="Live Preview"></iframe>
+			<div class="h-96 bg-white">
+				<iframe
+					id="live-preview-iframe"
+					src={iframeSrc}
+					class="h-full w-full border-0"
+					title="Live Preview"
+				></iframe>
 			</div>
 		</div>
 	</div>
