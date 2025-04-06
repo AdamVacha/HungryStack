@@ -1,16 +1,57 @@
-<script>
+<script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import BadgeDisplay from '$lib/components/BadgeDisplay.svelte';
 
 	let username = page?.data?.session?.user?.name ?? 'Guest';
-	//TODO: Update progress with $state rune / db
-	let progress = {
-		html: 25,
-		css: 50,
-		javascript: 75,
-		backend: 20
+
+	// Get progress data from page data using $ rune
+	let progressData = $derived(page.data.progressData || {});
+
+	// Define type for nextLessonLinks
+	type LessonLinks = {
+		html: string | null;
+		css: string | null;
+		javascript: string | null;
+		backend: string | null;
+		[key: string]: string | null;
 	};
+
+	// Initialize with default values
+	let progress = $state({
+		html: 0,
+		css: 0,
+		javascript: 0,
+		backend: 0
+	});
+
+	// Set up next lesson links
+	let nextLessonLinks = $state<LessonLinks>({
+		html: null,
+		css: null,
+		javascript: null,
+		backend: null
+	});
+
+	// Update progress when progressdata changes
+	$effect(() => {
+		progress.html = progressData.html?.progress || 0;
+		progress.css = progressData.css?.progress || 0;
+		progress.javascript = progressData.javascript?.progress || 0;
+		progress.backend = progressData.backend?.progress || 0;
+	});
+
+	// Update links when progressdata changes
+	$effect(() => {
+		Object.keys(progressData).forEach((subject: string) => {
+			const data = progressData[subject];
+			if (data && data.nextLessonId) {
+				nextLessonLinks[subject] =
+					`/lessons/subject/${data.subjectId}/module/${data.nextModuleId}/lesson/${data.nextLessonId}`;
+			}
+		});
+	});
+
 	let certificates = [
 		{ title: 'HTML Basics', description: 'Completed HTML Foundations' },
 		{ title: 'CSS Mastery', description: 'Completed CSS Animations' },
@@ -21,25 +62,44 @@
 		default: `Welcome, ${username}!<br> Keep stacking your pancakes!`,
 		html: 'HTML is the backbone of web pages. It structures your content!',
 		css: 'CSS makes the web beautiful! Learn how to style your pages.',
-		js: 'JavaScript brings web pages to life! Make them interactive.',
+		javascript: 'JavaScript brings web pages to life! Make them interactive.',
 		backend: 'Backend development handles databases and server logic.'
 	};
 
-	let speechBubbleText = messages.default;
+	type MessageKey = keyof typeof messages;
+
+	let speechBubbleText = $state(messages.default);
 
 	// Function to update message when hovering over a pancake
-	/**
-	 * @param {keyof typeof messages} category
-	 */
-	function updateMessage(category) {
+	function updateMessage(category: MessageKey) {
 		speechBubbleText = messages[category] || messages.default;
 	}
 
 	/**
-	 * @param {string} lesson
+	 * @param {string} subject
 	 */
-	function navigateToLesson(lesson) {
-		goto(`/lessons/${lesson}`);
+	function navigateToLesson(subject: string) {
+		console.log(`Navigating to ${subject}`, nextLessonLinks[subject]);
+		console.log(`Clicking ${subject} pancake`);
+		console.log(`Data for ${subject}:`, progressData[subject]);
+		console.log(`Next lesson link for ${subject}:`, nextLessonLinks[subject]);
+
+		// Get the subjectId from mapping
+		const subjectMap: Record<string, number> = {
+			html: 1,
+			css: 2,
+			javascript: 3,
+			backend: 4
+		};
+
+		const subjectId = subjectMap[subject] || 1;
+
+		if (nextLessonLinks[subject]) {
+			goto(nextLessonLinks[subject] as string);
+		} else {
+			// Get the first module and lesson for this subject
+			goto(`/lessons/subject/${subjectId}`);
+		}
 	}
 </script>
 
@@ -66,9 +126,9 @@
 				<button
 					class="pancake html"
 					tabindex="0"
-					on:mouseenter={() => updateMessage('html')}
-					on:mouseleave={() => updateMessage('default')}
-					on:click={() => navigateToLesson('html')}
+					onmouseenter={() => updateMessage('html')}
+					onmouseleave={() => updateMessage('default')}
+					onclick={() => navigateToLesson('html')}
 				>
 					<div class="butter"></div>
 					<p class="font-semibold">HTML</p>
@@ -79,9 +139,9 @@
 				<button
 					class="pancake css"
 					tabindex="0"
-					on:mouseenter={() => updateMessage('css')}
-					on:mouseleave={() => updateMessage('default')}
-					on:click={() => navigateToLesson('css')}
+					onmouseenter={() => updateMessage('css')}
+					onmouseleave={() => updateMessage('default')}
+					onclick={() => navigateToLesson('css')}
 				>
 					<p class="font-semibold">CSS</p>
 					<div class="progress-bar">
@@ -89,11 +149,11 @@
 					</div>
 				</button>
 				<button
-					class="pancake js"
+					class="pancake javascript"
 					tabindex="0"
-					on:mouseenter={() => updateMessage('js')}
-					on:mouseleave={() => updateMessage('default')}
-					on:click={() => navigateToLesson('js')}
+					onmouseenter={() => updateMessage('javascript')}
+					onmouseleave={() => updateMessage('default')}
+					onclick={() => navigateToLesson('javascript')}
 				>
 					<p class="font-semibold">JavaScript</p>
 					<div class="progress-bar">
@@ -103,9 +163,9 @@
 				<button
 					class="pancake backend"
 					tabindex="0"
-					on:mouseenter={() => updateMessage('backend')}
-					on:mouseleave={() => updateMessage('default')}
-					on:click={() => navigateToLesson('backend')}
+					onmouseenter={() => updateMessage('backend')}
+					onmouseleave={() => updateMessage('default')}
+					onclick={() => navigateToLesson('backend')}
 				>
 					<p class="font-semibold">Backend</p>
 					<div class="progress-bar">
