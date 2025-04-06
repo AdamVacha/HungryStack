@@ -40,7 +40,7 @@ export const load: LayoutServerLoad = async ({ params, parent, locals }) => {
 	return {
 		module,
 		allModules,
-		lessons: allLessons, 
+		lessons: allLessons,
 		currentProgress,
 		currentLessonId: lessonId
 	};

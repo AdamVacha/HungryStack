@@ -1,6 +1,15 @@
 import { writable, derived, type Writable, type Readable } from 'svelte/store';
 import { allBadges, type Badge } from './badgeSystem';
 
+// Define a type for the API badge response
+interface ApiBadge {
+	badgeId: string;
+	title: string;
+	description: string;
+	image: string;
+	category: 'html' | 'css' | 'javascript' | 'backend' | 'achievement';
+	dateEarned: string;
+}
 
 export const earnedBadges: Writable<Badge[]> = writable([]);
 export const badgeProgress: Writable<{ earned: number; total: number; percentage: number }> =
@@ -29,7 +38,7 @@ export async function initBadgeStore() {
 		const data = await response.json();
 
 		earnedBadges.set(
-			data.badges.map((badge: any) => ({
+			data.badges.map((badge: ApiBadge) => ({
 				id: badge.badgeId,
 				title: badge.title,
 				description: badge.description,
@@ -122,7 +131,6 @@ export function countEarnedBadges(): number {
 	})();
 	return count;
 }
-
 
 export function countTotalBadges(): number {
 	return allBadges.length;

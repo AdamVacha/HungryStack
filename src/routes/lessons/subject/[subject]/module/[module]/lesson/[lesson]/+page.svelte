@@ -15,16 +15,6 @@
 	import { sql } from '@codemirror/lang-sql';
 	import { oneDark } from '@codemirror/theme-one-dark';
 
-	// Prettier imports
-	import * as prettier from 'prettier/standalone';
-	import * as parserHTML from 'prettier/parser-html';
-	import * as parserCSS from 'prettier/parser-postcss';
-	import * as parserBabel from 'prettier/parser-babel';
-
-	// Sandpack imports / Wrapper exports
-	import { Sandpack } from '@codesandbox/sandpack-react';
-	import type { SandpackProps } from '@codesandbox/sandpack-react';
-
 	// Get page data from loader
 	let { data } = $props<{ data: PageData }>();
 
@@ -43,10 +33,21 @@
 
 	// Set initial code value after lesson data is available
 	$effect(() => {
+		console.log('Lesson content changed:', lesson?.content);
 		if (lesson?.content) {
+			// Update the code state
 			code = lesson.content;
 
-			updateEditorContent(lesson.content);
+			// Destroy existing editor if it exists
+			if (editorView) {
+				editorView.destroy();
+			}
+
+			// Then recreate the editor
+			requestAnimationFrame(() => {
+				createCodeMirrorEditor();
+				updateEditorContent(lesson.content);
+			});
 		}
 	});
 
@@ -63,40 +64,6 @@
 				return sql(); // SQL
 			default:
 				return javascript();
-		}
-	}
-
-	// Prettier formatting
-	// TODO finish implementing this later or just adjust content in db
-	function prettierCode(code: string, language: string) {
-		try {
-			// Select appropriate parser based on language
-			let parser;
-			switch (language) {
-				case 'html':
-					parser = 'html';
-					break;
-				case 'css':
-					parser = 'css';
-					break;
-				case 'javascript':
-				default:
-					parser = 'babel';
-			}
-
-			return prettier.format(code, {
-				parser,
-				plugins: [parserHTML, parserCSS, parserBabel],
-				tabWidth: 2,
-				useTabs: false,
-				semi: true,
-				singleQuote: true,
-				trailingComma: 'es5',
-				bracketSpacing: true
-			});
-		} catch (error) {
-			console.error('Prettier formatting error:', error);
-			return code; // Return original code if formatting fails
 		}
 	}
 
@@ -141,9 +108,8 @@
 		}
 	}
 
-	// Code Processing
-	let processedCode = $derived(code.replace(/\\n/g, '\n'));
-	let iframeSrc = $derived(`data:text/html;charset=utf-8,${encodeURIComponent(processedCode)}`);
+	// init iframe
+	let iframeSrc = $derived(`data:text/html;charset=utf-8,${encodeURIComponent(code)}`);
 
 	// Progress tracking
 	let isCompleted = $state(data?.progress ? data.progress.completedAt !== null : false);
@@ -171,27 +137,29 @@
 		if (isCompleted || !lesson?.id) return;
 
 		try {
-			const response = await fetch(`/api/progress/lesson/${lesson.id}`, {
+			// Create FormData
+			const formData = new FormData();
+			formData.append('timeSpent', timeSpent.toString());
+
+			// Use the form action
+			const response = await fetch(`?/markComplete`, {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					timeSpent
-				})
+				body: formData
 			});
 
 			if (response.ok) {
 				isCompleted = true;
 
-				// Get badges earned
+				// Parse result
 				const result = await response.json();
-				if (result.badges && result.badges.length > 0) {
-					showMultipleBadgeNotifications(result.badges);
+
+				// Show badges if any
+				if (result.form?.badges && result.form.badges.length > 0) {
+					showMultipleBadgeNotifications(result.form.badges);
 				}
 
 				// Check if module was completed
-				if (result.moduleCompleted && module?.id) {
+				if (result.form?.moduleCompleted && module?.id) {
 					const moduleBadges = await awardModuleCompletionBadges(module.id.toString());
 					if (moduleBadges.length > 0) {
 						showMultipleBadgeNotifications(moduleBadges);
@@ -207,7 +175,7 @@
 	function updateIframePreview() {
 		const iframe = document.getElementById('live-preview-iframe') as HTMLIFrameElement;
 		if (iframe) {
-			iframe.src = `data:text/html;charset=utf-8,${encodeURIComponent(processedCode)}`;
+			iframe.src = `data:text/html;charset=utf-8,${encodeURIComponent(code)}`;
 		}
 	}
 
@@ -215,15 +183,13 @@
 	async function goToNextLesson() {
 		await markLessonComplete();
 
-		if (lesson?.nextLessonId && subject?.id) {
-			// Use the pre-loaded module ID for the next lesson
-			const moduleId = data.nextLessonModule || module.id;
-			window.location.href = `/lessons/subject/${subject.id}/module/${moduleId}/lesson/${lesson.nextLessonId}`;
+		if (lesson?.nextLessonId) {
+			window.location.href = `/lessons/subject/${subject.id}/module/${module.id}/lesson/${lesson.nextLessonId}`;
 		}
 	}
 
 	async function goToPreviousLesson() {
-		if (lesson?.prevLessonId && subject?.id && module?.id) {
+		if (lesson?.prevLessonId) {
 			window.location.href = `/lessons/subject/${subject.id}/module/${module.id}/lesson/${lesson.prevLessonId}`;
 		}
 	}
@@ -236,7 +202,9 @@
 		<div class="mb-1 flex items-center">
 			<h1 class="text-3xl font-bold">{lesson?.title || 'Loading...'}</h1>
 		</div>
-		<p>Modify the code below and see the result in real time!</p>
+		<div class:hidden={lesson?.id !== 1}>
+			<p>Modify the code below and see the result in real time!</p>
+		</div>
 	</header>
 
 	<!-- Code Editor and Preview -->
@@ -278,7 +246,7 @@
 				</button>
 			</header>
 
-			<div bind:this={editorContainer} class="h-96 w-full overflow-auto"></div>
+			<div bind:this={editorContainer} class="h-[calc(100vh-320px)] w-full overflow-auto"></div>
 		</div>
 
 		<!-- Live Preview -->
@@ -286,7 +254,7 @@
 			<header class="bg-surface-100 px-4 py-2 dark:bg-gray-700">
 				<h2 class="text-lg font-medium">Live Preview</h2>
 			</header>
-			<div class="h-96 bg-white">
+			<div class="h-[calc(100vh-320px)] bg-white">
 				<iframe
 					id="live-preview-iframe"
 					src={iframeSrc}
@@ -323,14 +291,17 @@
 		</button>
 
 		<div>
-			{#if !isCompleted}
-				<button
-					class="rounded-lg bg-green-600 px-6 py-3 font-medium text-white transition-colors hover:bg-green-500"
-					onclick={markLessonComplete}
-				>
-					Mark as Completed
-				</button>
-			{/if}
+			<button
+				class="rounded-lg px-6 py-3 font-medium text-white transition-colors"
+				class:bg-green-600={!isCompleted}
+				class:hover:bg-green-500={!isCompleted}
+				class:bg-gray-400={isCompleted}
+				class:hover:bg-gray-400={isCompleted}
+				onclick={!isCompleted ? markLessonComplete : () => {}}
+				disabled={isCompleted}
+			>
+				{isCompleted ? 'Completed ✓' : 'Mark as Completed'}
+			</button>
 		</div>
 
 		<button
