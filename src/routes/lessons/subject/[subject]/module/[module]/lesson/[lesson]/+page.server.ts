@@ -68,9 +68,10 @@ export const actions: Actions = {
 				await db
 					.update(studentProgress)
 					.set({
-						timeSpent: (existingProgress.timeSpent || 0) + timeSpent, // Add null check
-						attempts: (existingProgress.attempts || 1) + 1, // Add null check
-						completedAt: existingProgress.completedAt || now
+						timeSpent: (existingProgress.timeSpent || 0) + timeSpent,
+						attempts: (existingProgress.attempts || 1) + 1,
+						// Always set completedAt to now, regardless of previous value
+						completedAt: now
 					})
 					.where(
 						and(
