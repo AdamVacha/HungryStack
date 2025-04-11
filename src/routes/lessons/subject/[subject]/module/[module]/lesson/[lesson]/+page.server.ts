@@ -2,10 +2,22 @@ import { error } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { db } from '$lib/server/db';
 import { eq, and, sql } from 'drizzle-orm';
-import { lessons, studentProgress, studentProfiles } from '$lib/server/db/schema';
+import {
+	lessons,
+	studentProgress,
+	studentProfiles,
+	modules,
+	subjects
+} from '$lib/server/db/schema';
+import {
+	awardBadge,
+	awardModuleCompletionBadges,
+	isModuleCompleted
+} from '$lib/server/services/badgeService';
+import { badgeMap } from '$lib/badges/badgeSystem';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
-	const { lesson: lessonId } = params;
+	const { lesson: lessonId, module: moduleId } = params;
 
 	// Get lesson details
 	const lesson = await db.query.lessons.findFirst({
@@ -15,6 +27,20 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	if (!lesson) {
 		throw error(404, 'Lesson not found');
 	}
+
+	// Get module details if not already provided
+	const module = await db.query.modules.findFirst({
+		where: eq(modules.id, +moduleId)
+	});
+
+	if (!module) {
+		throw error(404, 'Module not found');
+	}
+
+	// Get subject info from module
+	const subject = await db.query.subjects.findFirst({
+		where: eq(subjects.id, module.subjectId || 0)
+	});
 
 	// Get user progress for this lesson
 	const session = await locals.auth();
@@ -35,6 +61,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	return {
 		lesson,
+		module,
+		subject,
 		progress
 	};
 };
@@ -49,12 +77,22 @@ export const actions: Actions = {
 		const data = await request.formData();
 		const timeSpent = parseInt(data.get('timeSpent')?.toString() || '0');
 		const lessonId = parseInt(params.lesson);
+		const moduleId = parseInt(params.module);
 
 		// Get the current date
 		const now = new Date();
 		const dateString = now.toISOString(); // Convert Date to string format
 
 		try {
+			// Get the lesson first
+			const lesson = await db.query.lessons.findFirst({
+				where: eq(lessons.id, lessonId)
+			});
+
+			if (!lesson) {
+				return { success: false, error: 'Lesson not found' };
+			}
+
 			// Check if progress already exists
 			const existingProgress = await db.query.studentProgress.findFirst({
 				where: and(
@@ -62,6 +100,9 @@ export const actions: Actions = {
 					eq(studentProgress.lessonId, lessonId)
 				)
 			});
+
+			// Track if this is newly completed vs already completed
+			const isNewlyCompleted = !existingProgress?.completedAt;
 
 			// If progress exists, update it, otherwise insert new record
 			if (existingProgress) {
@@ -112,34 +153,73 @@ export const actions: Actions = {
 				});
 			}
 
-			// Check if all lessons in the module are completed
-			const lesson = await db.query.lessons.findFirst({
-				where: eq(lessons.id, lessonId)
-			});
+			// Award badges for first completion
+			let badges = [];
 
-			if (!lesson || lesson.moduleId === null) {
-				return { success: true, badges: [] };
+			// If this is newly completed, award first-bite badge
+			if (isNewlyCompleted) {
+				try {
+					// Count total completed lessons
+					const completedLessonsCount = await db
+						.select({ count: sql`COUNT(*)` })
+						.from(studentProgress)
+						.where(
+							and(
+								eq(studentProgress.studentId, session.user.id),
+								sql`${studentProgress.completedAt} IS NOT NULL`
+							)
+						);
+
+					const totalCompleted = parseInt(
+						(completedLessonsCount[0] as { count: number }).count.toString()
+					);
+					// If this is their first ever completed lesson
+					if (totalCompleted === 1) {
+						const firstBiteBadge = await awardBadge(session.user.id, 'first-bite');
+						if (firstBiteBadge) {
+							const badgeData = badgeMap.get('first-bite');
+							if (badgeData) {
+								badges.push({
+									...badgeData,
+									dateEarned: new Date()
+								});
+							}
+						}
+					}
+				} catch (error) {
+					console.error('Failed to award First Bite badge:', error);
+				}
 			}
 
-			const allLessonsInModule = await db.query.lessons.findMany({
-				where: eq(lessons.moduleId, lesson.moduleId) // This is where the error was
-			});
+			// Check if all lessons in the module are completed
+			const moduleCompleted = await isModuleCompleted(session.user.id, moduleId);
 
-			const completedLessons = await db.query.studentProgress.findMany({
-				where: and(
-					eq(studentProgress.studentId, session.user.id),
-					sql`${studentProgress.lessonId} IN (${allLessonsInModule.map((l) => l.id)})`,
-					sql`${studentProgress.completedAt} IS NOT NULL`
-				)
-			});
+			// If module is completed and this was the final lesson, award module completion badges
+			if (moduleCompleted) {
+				console.log(`Module ${moduleId} completed, awarding badges...`);
+				const moduleBadges = await awardModuleCompletionBadges(
+					session.user.id,
+					moduleId.toString()
+				);
 
-			const moduleCompleted = completedLessons.length === allLessonsInModule.length;
-
-			// TODO: Award badges logic here
+				// Add the awarded badges to the response
+				if (moduleBadges.length > 0) {
+					moduleBadges.forEach((badge) => {
+						const badgeData = badgeMap.get(badge.badgeId);
+						if (badgeData) {
+							badges.push({
+								...badgeData,
+								dateEarned: new Date()
+							});
+						}
+					});
+				}
+			}
 
 			return {
 				success: true,
 				moduleCompleted,
+				badges,
 				nextLessonId: lesson.nextLessonId
 			};
 		} catch (error) {
