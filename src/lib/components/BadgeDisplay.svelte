@@ -48,7 +48,7 @@
 						easing: quintOut
 					}}
 				>
-					<div class="avatar mb-2 h-32 p-1">
+					<div class="avatar mb-2 h-24 p-1">
 						<img src={badge.image} alt={badge.title} class="h-full w-full object-cover" />
 					</div>
 					<h3 class="line-clamp-1 text-sm font-bold">{badge.title}</h3>
