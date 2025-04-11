@@ -6,7 +6,9 @@
 		showMultipleBadgeNotifications
 	} from '$lib/badges/badgeNotification';
 	import BadgeNotification from '$lib/components/BadgeNotification.svelte';
+	import { goto } from '$app/navigation';
 	import { awardModuleCompletionBadges, hasBadge, refreshBadgeData } from '$lib/badges/badgeStore';
+
 
 	// CodeMirror imports
 	import { basicSetup } from 'codemirror';
@@ -38,7 +40,10 @@
 
 	// Set initial code value after lesson data is available
 	$effect(() => {
-		console.log('Lesson content changed:', lesson?.content);
+		if (lesson?.id) {
+			// Reset completion status when lesson changes
+			isCompleted = data?.progress ? data.progress.completedAt !== null : false;
+		}
 		if (lesson?.content) {
 			// Update the code state
 			code = lesson.content;
@@ -139,9 +144,14 @@
 
 	// Mark lesson as completed
 	async function markLessonComplete() {
-		if (isCompleted || !lesson?.id) return;
+		if (isCompleted || !lesson?.id) {
+			console.log('Skipping markLessonComplete - already completed or no lesson ID');
+			return;
+		}
 
 		try {
+			console.log(`Marking lesson ${lesson.id} as complete`);
+
 			// Create FormData
 			const formData = new FormData();
 			formData.append('timeSpent', timeSpent.toString());
@@ -235,8 +245,10 @@
 						}
 					}
 				}
+
 			} catch (parseError) {
 				console.error('Error processing badge notifications:', parseError);
+
 			}
 		} catch (error) {
 			console.error('Failed to mark lesson as complete:', error);
@@ -256,13 +268,20 @@
 		await markLessonComplete();
 
 		if (lesson?.nextLessonId) {
-			window.location.href = `/lessons/subject/${subject.id}/module/${module.id}/lesson/${lesson.nextLessonId}`;
+			goto(`/lessons/subject/${subject.id}/module/${module.id}/lesson/${lesson.nextLessonId}`, {
+				noScroll: true,
+
+				replaceState: false
+			});
 		}
 	}
 
 	async function goToPreviousLesson() {
 		if (lesson?.prevLessonId) {
-			window.location.href = `/lessons/subject/${subject.id}/module/${module.id}/lesson/${lesson.prevLessonId}`;
+			goto(`/lessons/subject/${subject.id}/module/${module.id}/lesson/${lesson.prevLessonId}`, {
+				noScroll: true,
+				replaceState: false
+			});
 		}
 	}
 </script>
