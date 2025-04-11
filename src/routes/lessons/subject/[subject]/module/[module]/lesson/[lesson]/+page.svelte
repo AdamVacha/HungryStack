@@ -9,7 +9,6 @@
 	import { goto } from '$app/navigation';
 	import { awardModuleCompletionBadges, hasBadge, refreshBadgeData } from '$lib/badges/badgeStore';
 
-
 	// CodeMirror imports
 	import { basicSetup } from 'codemirror';
 	import { EditorView, keymap } from '@codemirror/view';
@@ -245,10 +244,8 @@
 						}
 					}
 				}
-
 			} catch (parseError) {
 				console.error('Error processing badge notifications:', parseError);
-
 			}
 		} catch (error) {
 			console.error('Failed to mark lesson as complete:', error);
