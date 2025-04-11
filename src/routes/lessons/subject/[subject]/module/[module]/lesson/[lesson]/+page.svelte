@@ -1,10 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
-	import { showMultipleBadgeNotifications } from '$lib/badges/badgeNotification';
+	import {
+		showBadgeNotification,
+		showMultipleBadgeNotifications
+	} from '$lib/badges/badgeNotification';
 	import BadgeNotification from '$lib/components/BadgeNotification.svelte';
-	import { awardModuleCompletionBadges } from '$lib/badges/badgeStore';
 	import { goto } from '$app/navigation';
+	import { awardModuleCompletionBadges, hasBadge, refreshBadgeData } from '$lib/badges/badgeStore';
+
 
 	// CodeMirror imports
 	import { basicSetup } from 'codemirror';
@@ -15,6 +19,8 @@
 	import { css } from '@codemirror/lang-css';
 	import { sql } from '@codemirror/lang-sql';
 	import { oneDark } from '@codemirror/theme-one-dark';
+	import { page } from '$app/state';
+	import { moduleToBasicBadgeMap, badgeMap, type Badge } from '$lib/badges/badgeSystem';
 
 	// Get page data from loader
 	let { data } = $props<{ data: PageData }>();
@@ -156,26 +162,93 @@
 				body: formData
 			});
 
-			if (response.ok) {
-				const result = await response.json();
-				console.log('Mark complete response:', result);
+			if (!response.ok) {
+				throw new Error(`Failed to mark lesson as complete: ${response.statusText}`);
+			}
 
-				isCompleted = true;
+			isCompleted = true;
 
-				// Show badges if any
-				if (result.form?.badges && result.form.badges.length > 0) {
-					showMultipleBadgeNotifications(result.form.badges);
+			// Parse result
+			const result = await response.json();
+			console.log('Server response:', result);
+
+			try {
+				// Parse the response data if needed
+				let parsedData;
+				if (typeof result.data === 'string') {
+					parsedData = JSON.parse(result.data);
+				} else {
+					parsedData = result.form || result;
 				}
 
-				// Check if module was completed
-				if (result.form?.moduleCompleted && module?.id) {
-					const moduleBadges = await awardModuleCompletionBadges(module.id.toString());
-					if (moduleBadges.length > 0) {
-						showMultipleBadgeNotifications(moduleBadges);
+				// Check for module completion
+				const moduleCompleted =
+					result.form?.moduleCompleted === 1 ||
+					(parsedData[0] && parsedData[0].moduleCompleted === 1);
+
+				if (moduleCompleted && module?.id) {
+					console.log(`Module ${module.id} was completed!`);
+
+					// Get badge ID for this module
+					const badgeId = moduleToBasicBadgeMap[module.id.toString()];
+
+					if (badgeId) {
+						// Get badge details from the badge map
+						const badgeDetails = badgeMap.get(badgeId);
+
+						if (badgeDetails) {
+							// Create a badge object with current date
+							const badge: Badge = {
+								...badgeDetails,
+								dateEarned: new Date()
+							};
+
+							console.log('Showing badge notification for module completion:', badge);
+							showBadgeNotification(badge);
+
+							// For stack-starter badge (first module completion)
+							const hasStackStarterBadge = hasBadge('stack-starter');
+							if (!hasStackStarterBadge) {
+								const stackStarterBadge = badgeMap.get('stack-starter');
+								if (stackStarterBadge) {
+									setTimeout(() => {
+										const badge: Badge = {
+											...stackStarterBadge,
+											dateEarned: new Date()
+										};
+										showBadgeNotification(badge);
+									}, 2000);
+								}
+							}
+						}
+					}
+
+					// Refresh badges from server (in background, after showing notifications)
+					refreshBadgeData();
+				}
+
+				// Check if this was the first lesson completion
+				const firstLesson = parsedData[0] && parsedData[0].success === 1 && !moduleCompleted;
+
+				if (firstLesson) {
+					// Show first-bite badge if user doesn't already have it
+					const hasFirstBiteBadge = hasBadge('first-bite');
+					if (!hasFirstBiteBadge) {
+						const firstBiteBadge = badgeMap.get('first-bite');
+						if (firstBiteBadge) {
+							const badge: Badge = {
+								...firstBiteBadge,
+								dateEarned: new Date()
+							};
+							console.log('Showing first-bite badge notification:', badge);
+							showBadgeNotification(badge);
+						}
 					}
 				}
-			} else {
-				console.error('Failed to mark lesson as complete, server returned:', response.status);
+
+			} catch (parseError) {
+				console.error('Error processing badge notifications:', parseError);
+
 			}
 		} catch (error) {
 			console.error('Failed to mark lesson as complete:', error);
@@ -264,7 +337,7 @@
 				</button>
 			</header>
 
-			<div bind:this={editorContainer} class="h-[calc(100vh-320px)] w-full overflow-auto"></div>
+			<div bind:this={editorContainer} class="max-h-screen w-full overflow-auto"></div>
 		</div>
 
 		<!-- Live Preview -->
@@ -272,11 +345,11 @@
 			<header class="bg-surface-100 px-4 py-2 dark:bg-gray-700">
 				<h2 class="text-lg font-medium">Live Preview</h2>
 			</header>
-			<div class="h-[calc(100vh-320px)] bg-white">
+			<div class="max-h-screen bg-white">
 				<iframe
 					id="live-preview-iframe"
 					src={iframeSrc}
-					class="h-full w-full border-0"
+					class="h-screen w-full border-0"
 					title="Live Preview"
 				></iframe>
 			</div>

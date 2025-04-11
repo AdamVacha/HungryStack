@@ -65,8 +65,5 @@ jobs:
       - name: Run Database Migrations
         run: pnpm drizzle-kit migrate
 
-      - name: Sync Sveltekit files
-        run: pnpm svelte-kit sync
-
       - name: Build
         run: pnpm build
