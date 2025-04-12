@@ -17,7 +17,7 @@
 	<!-- Header with progress indicator -->
 	<header class="mb-4 flex items-center justify-between">
 		<h2
-			class="h2 bg-gradient-to-br from-orange-500 to-amber-500 box-decoration-clone bg-clip-text text-transparent"
+			class="h2 font-semibold pb-2 bg-gradient-to-br from-orange-500 to-amber-500 box-decoration-clone bg-clip-text text-transparent"
 		>
 			Your Badges
 		</h2>
@@ -48,7 +48,7 @@
 						easing: quintOut
 					}}
 				>
-					<div class="avatar mb-2 h-24 p-1">
+					<div class="avatar mb-2 h-24 p-1 badge-container">
 						<img src={badge.image} alt={badge.title} class="h-full w-full object-cover" />
 					</div>
 					<h3 class="line-clamp-1 text-sm font-bold">{badge.title}</h3>
@@ -65,3 +65,14 @@
 		</button>
 	</footer>
 </div>
+
+<style>
+	.badge-container {
+		transition: transform 0.2s ease-in-out;
+		transform-origin: center;
+	}
+	
+	.badge-container:hover {
+		transform: scale(1.1);
+	}
+</style>

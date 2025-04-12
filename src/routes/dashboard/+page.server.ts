@@ -126,8 +126,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 					if (nextLessonId) break;
 				}
 			}
-			// TODO badge logic
-
+		
 			progressData[subjectName] = {
 				progress,
 				nextLessonId,
