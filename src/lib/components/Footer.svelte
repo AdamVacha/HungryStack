@@ -1,6 +1,6 @@
-<footer class="py-6">
+<footer class="">
 	<div class="container mx-auto text-center">
-		<div class="mb-4 flex items-center justify-center space-x-4">
+		<div class="mb-4  flex items-center justify-center space-x-4">
 			<!-- GitHub Link -->
 			<a
 				href="https://github.com/AdamVacha/HungryStack"

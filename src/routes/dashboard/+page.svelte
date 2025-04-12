@@ -103,31 +103,33 @@
 	}
 </script>
 
-<main class="min-h-screen">
+<main class="min-h-screen px-4 py-6 md:px-6 md:py-8 lg:py-10">
 	<section
-		class="mt-[-4rem] grid max-h-[900px] grid-cols-1 items-center justify-center justify-items-stretch gap-8 p-10 lg:grid-cols-10"
+		class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-10 items-center justify-center md:py-6"
 	>
-		<!-- Welcome Message Column (30%) -->
-		<section class="lg:col-span-3">
-			<div class="items-center space-x-4 p-10">
+		<!-- Welcome Message Column -->
+		<section class="md:col-span-1 lg:col-span-3 flex justify-center">
+			<div class="flex flex-col items-center md:space-x-4 md:p-4">
 				<!-- Speech Bubble -->
-				<div class="speech-bubble">
+				<div class="speech-bubble mb-4 w-full max-w-xs mx-auto">
 					<p>
 						{@html speechBubbleText}
 					</p>
 				</div>
-				<img src="/images/mascot.png" alt="Mascot" class="relative h-80 animate-bounce" />
+				<img src="/images/mascot.png" alt="Mascot" class="relative h-48 md:h-64 lg:h-80 animate-bounce" />
 			</div>
 		</section>
 
-		<!-- Pancake Stack Column (70%) -->
-		<section class="p-10 lg:col-span-7">
+		<!-- Pancake Stack Column -->
+		<section class="md:col-span-1 lg:col-span-7 px-4 md:p-4 lg:p-10">
 			<div class="pancake-stack my-4 flex flex-col items-center text-gray-700">
 				<button
 					class="pancake html"
 					tabindex="0"
 					onmouseenter={() => updateMessage('html')}
+					ontouchstart={() => updateMessage('html')} 
 					onmouseleave={() => updateMessage('default')}
+					ontouchend={() => updateMessage('default')}
 					onclick={() => navigateToLesson('html')}
 				>
 					<div class="butter"></div>
@@ -140,7 +142,9 @@
 					class="pancake css"
 					tabindex="0"
 					onmouseenter={() => updateMessage('css')}
+					ontouchstart={() => updateMessage('css')} 
 					onmouseleave={() => updateMessage('default')}
+					ontouchend={() => updateMessage('default')}
 					onclick={() => navigateToLesson('css')}
 				>
 					<p class="font-semibold">CSS</p>
@@ -152,7 +156,9 @@
 					class="pancake javascript"
 					tabindex="0"
 					onmouseenter={() => updateMessage('javascript')}
+					ontouchstart={() => updateMessage('javascript')} 
 					onmouseleave={() => updateMessage('default')}
+					ontouchend={() => updateMessage('default')}
 					onclick={() => navigateToLesson('javascript')}
 				>
 					<p class="font-semibold">JavaScript</p>
@@ -164,7 +170,9 @@
 					class="pancake backend"
 					tabindex="0"
 					onmouseenter={() => updateMessage('backend')}
+					ontouchstart={() => updateMessage('backend')} 
 					onmouseleave={() => updateMessage('default')}
+					ontouchend={() => updateMessage('default')}
 					onclick={() => navigateToLesson('backend')}
 				>
 					<p class="font-semibold">Backend</p>
@@ -175,13 +183,15 @@
 			</div>
 		</section>
 	</section>
+	
 	<!-- Achievements Section -->
-
-	<section class="mt-[-7rem] flex justify-center space-x-8 p-6">
+	<section class="mt-8 md:mt-0 lg:mt-[-2rem] flex flex-col md:flex-row justify-center gap-8 p-4">
 		<!-- Badge Display Component -->
-		<BadgeDisplay limit={5} />
+		<div class="w-full md:w-1/2 lg:max-w-3xl">
+			<BadgeDisplay limit={5} />
+		</div>
 
-		<div class="card w-full max-w-3xl p-6 shadow">
+		<div class="card w-full md:w-1/2 lg:max-w-3xl p-6 shadow">
 			<h2
 				class="mb-2 bg-gradient-to-br from-red-500 to-yellow-500 box-decoration-clone bg-clip-text text-center text-2xl font-semibold text-transparent"
 			>
@@ -190,7 +200,7 @@
 			<ul class="space-y-4">
 				{#each certificates as certificate}
 					<li class="flex items-center space-x-4">
-						<div class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500">
+						<div class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 flex-shrink-0">
 							🏆
 						</div>
 						<div>
@@ -215,7 +225,6 @@
 		font-weight: bold;
 		font-size: 1rem;
 		color: rgb(50, 50, 50);
-		max-width: 250px;
 		min-height: 100px;
 	}
 
@@ -250,22 +259,23 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
+		width: 100%;
 	}
 
 	.butter {
-		width: 130px;
-		height: 32px;
+		width: 100px;
+		height: 25px;
 		background: linear-gradient(to bottom, #f1ee90, #f2e144);
 		border-radius: 10px;
 		position: absolute;
-		top: -15px;
-		left: calc(50% - 65px);
+		top: -12px;
+		left: calc(50% - 50px);
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 	}
 
 	.pancake {
-		width: 80%;
-		padding: 20px;
+		width: 100%;
+		padding: 15px;
 		background: linear-gradient(to bottom, #f9c74f, #e68250);
 		border-radius: 100px;
 		text-align: center;
@@ -307,5 +317,58 @@
 
 	.badge-container img:hover {
 		transform: scale(1.1);
+	}
+
+	/* Media Queries for Responsive Design */
+	@media (max-width: 640px) {
+		.butter {
+			width: 80px;
+			height: 20px;
+			top: -10px;
+			left: calc(50% - 40px);
+		}
+		
+		.pancake {
+			padding: 12px;
+		}
+		
+		.progress-bar {
+			height: 8px;
+		}
+	}
+	
+	@media (min-width: 768px) {
+		.speech-bubble {
+			font-size: 1.1rem;
+		}
+		
+		.butter {
+			width: 110px;
+			height: 28px;
+			top: -14px;
+			left: calc(50% - 55px);
+		}
+	}
+	
+	@media (min-width: 1024px) {
+		.butter {
+			width: 130px;
+			height: 32px;
+			top: -15px;
+			left: calc(50% - 65px);
+		}
+		
+		.pancake {
+			width: 80%;
+			padding: 20px;
+		}
+		
+		.pancake-stack {
+			gap: 0;
+		}
+		
+		.progress-bar {
+			height: 10px;
+		}
 	}
 </style>

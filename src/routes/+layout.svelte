@@ -35,13 +35,13 @@
 	<AppShell title="Hungry Stack">
 		<svelte:fragment slot="header">
 			<!-- App Bar -->
-			<AppBar class="px-8 py-4">
+			<AppBar class="px-2 sm:px-4 md:px-8 py-3 md:py-4">
 				<svelte:fragment slot="lead">
 					<!-- if logged in go to dashboard, else go to home -->
 					<a
 						href={page.data.session ? '/dashboard' : '/'}
-						class="ml-8 text-2xl font-bold text-tertiary-600 transition-colors duration-200 hover:text-primary-500 dark:text-primary-500 dark:hover:text-tertiary-400"
-						><span class="logo-icon">🥞</span> Hungry Stack</a
+						class="ml-2 sm:ml-4 md:ml-8 text-lg sm:text-xl md:text-2xl font-bold text-tertiary-600 transition-colors duration-200 hover:text-primary-500 dark:text-primary-500 dark:hover:text-tertiary-400"
+						><span class="logo-icon">🥞</span> <span class="hidden sm:inline">Hungry Stack</span><span class="sm:hidden">Hungry Stack</span></a
 					>
 				</svelte:fragment>
 
@@ -49,7 +49,7 @@
 					<!-- User Icon -->
 					{#if page.data.session}
 						<button
-							class="px-4 transition-colors duration-200 hover:text-primary-500"
+							class="px-2 sm:px-4 transition-colors duration-200 hover:text-primary-500"
 							use:popup={userMenuPopup}
 							aria-label="User menu"
 						>
@@ -58,7 +58,7 @@
 								version="1.1"
 								xmlns="http://www.w3.org/2000/svg"
 								viewBox="0 0 45.532 45.532"
-								class="h-6 w-6"
+								class="h-5 w-5 sm:h-6 sm:w-6"
 							>
 								<g>
 									<path
@@ -68,21 +68,18 @@
 							</svg>
 						</button>
 
-						<div class="card w-48 py-2 shadow-xl" data-popup="userMenuPopup">
+						<div class="card w-40 sm:w-48 py-2 shadow-xl" data-popup="userMenuPopup">
 							<div class="grid grid-cols-1 gap-2">
-								<a href="/dashboard" id="will-close" class="block px-4 py-2 hover:bg-secondary-400"
+								<a href="/dashboard" id="will-close" class="block px-3 sm:px-4 py-2 text-sm sm:text-base hover:bg-secondary-400"
 									>Dashboard</a
 								>
-								<a href="/badges" id="will-close" class="block px-4 py-2 hover:bg-secondary-400"
+								<a href="/badges" id="will-close" class="block px-3 sm:px-4 py-2 text-sm sm:text-base hover:bg-secondary-400"
 									>Badges</a
-								>
-								<a href="/settings" id="will-close" class="block px-4 py-2 hover:bg-secondary-400"
-									>Settings</a
 								>
 								<button
 									id="will-close"
 									onclick={() => signOut({ callbackUrl: '/' })}
-									class="block w-full px-4 py-2 text-left hover:bg-secondary-400"
+									class="block w-full px-3 sm:px-4 py-2 text-sm sm:text-base text-left hover:bg-secondary-400"
 								>
 									Sign Out
 								</button>
@@ -97,9 +94,44 @@
 		</svelte:fragment>
 
 		<!-- Page Route Content -->
-		{@render children()}
+		<div class="w-full h-full">
+			{@render children()}
+		</div>
 
 		<!-- Footer -->
-		<Footer />
 	</AppShell>
 </ParaglideJS>
+
+<style>
+	/* Ensure app content takes full width on mobile */
+	:global(.app-shell) {
+		display: flex;
+		flex-direction: column;
+		min-height: 100vh;
+		width: 100%;
+	}
+	
+	:global(.app-shell-header) {
+		position: sticky;
+		top: 0;
+		z-index: 10;
+	}
+	
+	:global(.app-shell-content) {
+		flex: 1;
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+	}
+	
+	/* Enhance touch targets on mobile */
+	@media (max-width: 640px) {
+		:global(.app-bar a),
+		:global(.app-bar button) {
+			padding: 0.5rem;
+			min-height: 44px;
+			display: flex;
+			align-items: center;
+		}
+	}
+</style>

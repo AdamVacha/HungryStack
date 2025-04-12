@@ -35,7 +35,7 @@
 
 	// Local state for editor - initialize with a default value first
 	let code = $state('');
-	let isCodePanelHorizontal = $state(true);
+	let isCodePanelHorizontal = $state(window.innerWidth >= 768); // Default to vertical on mobile
 
 	// Set initial code value after lesson data is available
 	$effect(() => {
@@ -117,6 +117,14 @@
 		}
 	}
 
+	// Handle window resize for responsive layout
+	function handleResize() {
+		const newIsHorizontal = window.innerWidth >= 768;
+		if (newIsHorizontal !== isCodePanelHorizontal) {
+			isCodePanelHorizontal = newIsHorizontal;
+		}
+	}
+
 	// init iframe
 	let iframeSrc = $derived(`data:text/html;charset=utf-8,${encodeURIComponent(code)}`);
 
@@ -128,6 +136,9 @@
 	// Start tracking time spent on the lesson
 	onMount(() => {
 		createCodeMirrorEditor();
+		
+		// Add resize listener
+		window.addEventListener('resize', handleResize);
 
 		timeTracker = window.setInterval(() => {
 			timeSpent += 1;
@@ -138,6 +149,7 @@
 				editorView.destroy();
 			}
 			if (timeTracker) clearInterval(timeTracker);
+			window.removeEventListener('resize', handleResize);
 		};
 	});
 
@@ -267,7 +279,6 @@
 		if (lesson?.nextLessonId) {
 			goto(`/lessons/subject/${subject.id}/module/${module.id}/lesson/${lesson.nextLessonId}`, {
 				noScroll: true,
-
 				replaceState: false
 			});
 		}
@@ -285,26 +296,29 @@
 
 <BadgeNotification />
 
-<div class="w-full flex-1 rounded-lg bg-surface-300 p-6 shadow-lg dark:bg-gray-900">
-	<header class="mb-6">
+<div
+	class="flex h-screen w-full flex-1 flex-col rounded-lg bg-surface-300 p-2 sm:p-4 md:p-6 shadow-lg dark:bg-gray-900 overflow-hidden"
+>
+	<header class="mb-2 sm:mb-4 md:mb-6">
 		<div class="mb-1 flex items-center">
-			<h1 class="text-3xl font-bold">{lesson?.title || 'Loading...'}</h1>
+			<h1 class="text-xl sm:text-2xl md:text-3xl font-bold truncate">{lesson?.title || 'Loading...'}</h1>
 		</div>
 		<div class:hidden={lesson?.id !== 1}>
-			<p>Modify the code below and see the result in real time!</p>
+			<p class="text-sm sm:text-base">Modify the code below and see the result in real time!</p>
 		</div>
 	</header>
 
 	<!-- Code Editor and Preview -->
 	<div
-		class="grid gap-6"
-		class:grid-cols-2={isCodePanelHorizontal}
+		class="grid flex-1 gap-2 sm:gap-4 md:gap-6 overflow-hidden"
 		class:grid-cols-1={!isCodePanelHorizontal}
+		class:grid-rows-2={!isCodePanelHorizontal}
+		class:grid-cols-2={isCodePanelHorizontal}
 	>
 		<!-- Code Editor -->
-		<div class="overflow-hidden rounded-lg bg-surface-100 dark:bg-gray-800">
-			<header class="flex items-center justify-between px-4 py-2 dark:bg-gray-700">
-				<h2 class="text-lg font-medium">Code Editor</h2>
+		<div class="flex flex-col overflow-hidden rounded-lg bg-surface-100 dark:bg-gray-800 min-h-[200px]">
+			<header class="flex items-center justify-between px-2 sm:px-4 py-1 sm:py-2 dark:bg-gray-700">
+				<h2 class="text-base sm:text-lg font-medium">Code Editor</h2>
 				<button
 					onclick={() => (isCodePanelHorizontal = !isCodePanelHorizontal)}
 					class="rounded p-1 transition-colors hover:bg-gray-600"
@@ -314,14 +328,15 @@
 				>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
-						width="20"
-						height="20"
+						width="16"
+						height="16"
 						viewBox="0 0 24 24"
 						fill="none"
 						stroke="currentColor"
 						stroke-width="2"
 						stroke-linecap="round"
 						stroke-linejoin="round"
+						class="sm:h-5 sm:w-5"
 					>
 						{#if isCodePanelHorizontal}
 							<rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
@@ -334,19 +349,19 @@
 				</button>
 			</header>
 
-			<div bind:this={editorContainer} class="max-h-screen w-full overflow-auto"></div>
+			<div bind:this={editorContainer} class="w-full flex-1 overflow-auto"></div>
 		</div>
 
 		<!-- Live Preview -->
-		<div class="overflow-hidden rounded-lg">
-			<header class="bg-surface-100 px-4 py-2 dark:bg-gray-700">
-				<h2 class="text-lg font-medium">Live Preview</h2>
+		<div class="flex flex-col overflow-hidden rounded-lg min-h-[200px]">
+			<header class="bg-surface-100 px-2 sm:px-4 py-1 sm:py-2 dark:bg-gray-700">
+				<h2 class="text-base sm:text-lg font-medium">Live Preview</h2>
 			</header>
-			<div class="max-h-screen bg-white">
+			<div class="flex-1 bg-white">
 				<iframe
 					id="live-preview-iframe"
 					src={iframeSrc}
-					class="h-screen w-full border-0"
+					class="h-full w-full border-0"
 					title="Live Preview"
 				></iframe>
 			</div>
@@ -354,9 +369,9 @@
 	</div>
 
 	<!-- Navigation Buttons -->
-	<footer class="mt-6 flex justify-between">
+	<footer class="mt-2 sm:mt-4 md:mt-6 flex justify-between">
 		<button
-			class="flex items-center gap-2 rounded-lg bg-gray-700 px-6 py-3 text-white transition-colors hover:bg-gray-600"
+			class="flex items-center gap-1 sm:gap-2 rounded-lg bg-gray-700 px-2 sm:px-4 md:px-6 py-2 sm:py-3 text-sm sm:text-base text-white transition-colors hover:bg-gray-600"
 			onclick={goToPreviousLesson}
 			disabled={!lesson?.prevLessonId}
 			class:opacity-50={!lesson?.prevLessonId}
@@ -364,23 +379,24 @@
 		>
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
-				width="20"
-				height="20"
+				width="16"
+				height="16"
 				viewBox="0 0 24 24"
 				fill="none"
 				stroke="currentColor"
 				stroke-width="2"
 				stroke-linecap="round"
 				stroke-linejoin="round"
+				class="sm:h-5 sm:w-5"
 			>
 				<path d="m15 18-6-6 6-6" />
 			</svg>
-			Previous
+			<span class="hidden xs:inline">Previous</span>
 		</button>
 
 		<div>
 			<button
-				class="rounded-lg px-6 py-3 font-medium text-white transition-colors"
+				class="rounded-lg px-2 sm:px-4 md:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium text-white transition-colors"
 				class:bg-green-600={!isCompleted}
 				class:hover:bg-green-500={!isCompleted}
 				class:bg-gray-400={isCompleted}
@@ -388,31 +404,40 @@
 				onclick={!isCompleted ? markLessonComplete : () => {}}
 				disabled={isCompleted}
 			>
-				{isCompleted ? 'Completed ✓' : 'Mark as Completed'}
+				{isCompleted ? 'Completed ✓' : 'Mark Complete'}
 			</button>
 		</div>
 
 		<button
-			class="flex items-center gap-2 rounded-lg bg-tertiary-500 px-6 py-3 text-white transition-colors hover:bg-tertiary-400"
+			class="flex items-center gap-1 sm:gap-2 rounded-lg bg-tertiary-500 px-2 sm:px-4 md:px-6 py-2 sm:py-3 text-sm sm:text-base text-white transition-colors hover:bg-tertiary-400"
 			onclick={goToNextLesson}
 			disabled={!lesson?.nextLessonId}
 			class:opacity-50={!lesson?.nextLessonId}
 			class:cursor-not-allowed={!lesson?.nextLessonId}
 		>
-			Next
+			<span class="hidden xs:inline">Next</span>
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
-				width="20"
-				height="20"
+				width="16"
+				height="16"
 				viewBox="0 0 24 24"
 				fill="none"
 				stroke="currentColor"
 				stroke-width="2"
 				stroke-linecap="round"
 				stroke-linejoin="round"
+				class="sm:h-5 sm:w-5"
 			>
 				<path d="m9 18 6-6-6-6" />
 			</svg>
 		</button>
 	</footer>
 </div>
+
+<style>
+	@media (min-width: 480px) {
+		.xs\:inline {
+			display: inline;
+		}
+	}
+</style>
