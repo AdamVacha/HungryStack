@@ -1,14 +1,7 @@
-import { error } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { db } from '$lib/server/db';
 import { eq, and, sql } from 'drizzle-orm';
-import {
-	lessons,
-	studentProgress,
-	studentProfiles,
-	modules,
-	subjects
-} from '$lib/server/db/schema';
+import { lessons, studentProgress, studentProfiles } from '$lib/server/db/schema';
 import {
 	awardBadge,
 	awardModuleCompletionBadges,
@@ -16,31 +9,16 @@ import {
 } from '$lib/server/services/badgeService';
 import { badgeMap } from '$lib/badges/badgeSystem';
 
-export const load: PageServerLoad = async ({ params, locals }) => {
-	const { lesson: lessonId, module: moduleId } = params;
+export const load: PageServerLoad = async ({ parent, params, locals }) => {
+	const { lesson: lessonId } = params;
 
 	// Get lesson details
 	const lesson = await db.query.lessons.findFirst({
 		where: eq(lessons.id, +lessonId)
 	});
 
-	if (!lesson) {
-		throw error(404, 'Lesson not found');
-	}
-
-	// Get module details if not already provided
-	const module = await db.query.modules.findFirst({
-		where: eq(modules.id, +moduleId)
-	});
-
-	if (!module) {
-		throw error(404, 'Module not found');
-	}
-
-	// Get subject info from module
-	const subject = await db.query.subjects.findFirst({
-		where: eq(subjects.id, module.subjectId || 0)
-	});
+	// Get subject & module info from parent route load function
+	const { subject, module } = await parent();
 
 	// Get user progress for this lesson
 	const session = await locals.auth();
@@ -155,7 +133,7 @@ export const actions: Actions = {
 			}
 
 			// Award badges for first completion
-			let badges = [];
+			const badges = [];
 
 			// If this is newly completed, award first-bite badge
 			if (isNewlyCompleted) {

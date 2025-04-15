@@ -18,7 +18,6 @@
 	import { css } from '@codemirror/lang-css';
 	import { sql } from '@codemirror/lang-sql';
 	import { oneDark } from '@codemirror/theme-one-dark';
-	import { page } from '$app/state';
 	import { moduleToBasicBadgeMap, badgeMap, type Badge } from '$lib/badges/badgeSystem';
 
 	// Get page data from loader
@@ -267,7 +266,6 @@
 		if (lesson?.nextLessonId) {
 			goto(`/lessons/subject/${subject.id}/module/${module.id}/lesson/${lesson.nextLessonId}`, {
 				noScroll: true,
-
 				replaceState: false
 			});
 		}
