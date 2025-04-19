@@ -17,7 +17,8 @@
 		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio",
 		"db:generate": "drizzle-kit generate --config=drizzle.config.ts",
-		"migrate": "tsx drizzle/migrate.ts"
+		"migrate": "tsx drizzle/migrate.ts",
+		"start": "node .svelte-kit/output/server/index.js"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.3",
