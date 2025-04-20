@@ -8,7 +8,8 @@ import {
 	serial,
 	date,
 	jsonb,
-	varchar
+	varchar,
+	uniqueIndex
 } from 'drizzle-orm/pg-core';
 import type { AdapterAccount } from '@auth/core/adapters';
 import { relations, type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
@@ -181,6 +182,56 @@ export const studentAchievements = pgTable(
 		compoundKey: primaryKey({ columns: [table.studentId, table.achievementId] })
 	})
 );
+
+export const certificates = pgTable('certificates', {
+	id: serial('certificate_id').primaryKey(),
+	title: varchar('title', { length: 255 }).notNull(),
+	description: text('description'),
+	subjectId: integer('subject_id').references(() => subjects.id, { onDelete: 'cascade' }),
+	templateImage: varchar('template_image', { length: 255 }),
+	requiredModules: jsonb('required_modules'),
+});
+
+export const studentCertificates = pgTable(
+	'student_certificates',
+	{
+		id: serial('student_certificate_id').primaryKey(),
+		studentId: text('student_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		certificateId: integer('certificate_id')
+			.notNull()
+			.references(() => certificates.id, { onDelete: 'cascade' }),
+		earnedAt: timestamp('earned_at').defaultNow(),
+		completionData: jsonb('completion_data') // Additional data about the completion
+	},
+	(table) => ({
+		uniqueConstraint: uniqueIndex('student_certificate_unique').on(
+			table.studentId,
+			table.certificateId
+		)
+	})
+);
+
+// Add relation definitions
+export const certificateRelations = relations(certificates, ({ one, many }) => ({
+	subject: one(subjects, {
+		fields: [certificates.subjectId],
+		references: [subjects.id]
+	}),
+	studentCertificates: many(studentCertificates)
+}));
+
+export const studentCertificateRelations = relations(studentCertificates, ({ one }) => ({
+	student: one(users, {
+		fields: [studentCertificates.studentId],
+		references: [users.id]
+	}),
+	certificate: one(certificates, {
+		fields: [studentCertificates.certificateId],
+		references: [certificates.id]
+	})
+}));
 
 // Assessments
 export const quizzes = pgTable('quizzes', {

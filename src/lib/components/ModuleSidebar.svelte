@@ -16,7 +16,7 @@
 		progress = {}
 	} = $props<{
 		subject: subjects;
-		modules: modules[];
+		modules: modulesType[];
 		currentModuleId: number;
 		currentLessonId: number;
 		lessons: lessons[];
@@ -41,8 +41,8 @@
 	// Get lessons for a specific module
 	function getLessonsForModule(moduleId: number) {
 		return allLessons
-			.filter((lesson) => lesson.moduleId === moduleId)
-			.sort((a, b) => (a?.orderInModule || 0) - (b?.orderInModule || 0));
+			.filter((lesson: { moduleId: number; }) => lesson.moduleId === moduleId)
+			.sort((a: { orderInModule: any; }, b: { orderInModule: any; }) => (a?.orderInModule || 0) - (b?.orderInModule || 0));
 	}
 
 	// Check if a lesson is completed

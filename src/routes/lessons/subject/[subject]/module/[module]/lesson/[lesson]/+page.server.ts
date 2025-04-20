@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { db } from '$lib/server/db';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, gt } from 'drizzle-orm';
 import {
 	lessons,
 	studentProgress,
@@ -14,7 +14,63 @@ import {
 	awardModuleCompletionBadges,
 	isModuleCompleted
 } from '$lib/server/services/badgeService';
-import { badgeMap } from '$lib/badges/badgeSystem';
+import { badgeMap } from '$lib/badges/badges';
+
+/**
+ * Finds the next module ID based on current module
+ */
+async function findNextModuleId(currentModuleId: number): Promise<number | null> {
+	try {
+		// Get the current module to find its order and subject
+		const currentModule = await db
+			.select({ subjectId: modules.subjectId, orderInSubject: modules.orderInSubject })
+			.from(modules)
+			.where(eq(modules.id, currentModuleId))
+			.limit(1);
+
+		if (!currentModule.length || currentModule[0].subjectId === null) {
+			return null;
+		}
+
+		const { subjectId, orderInSubject } = currentModule[0];
+
+		// Find the next module in the subject
+		const nextModule = await db
+			.select({ id: modules.id })
+			.from(modules)
+			.where(
+				and(
+					eq(modules.subjectId, subjectId),
+					gt(modules.orderInSubject, orderInSubject || 0)
+				)
+			)
+			.orderBy(modules.orderInSubject)
+			.limit(1);
+
+		return nextModule.length ? nextModule[0].id : null;
+	} catch (error) {
+		console.error('Error finding next module:', error);
+		return null;
+	}
+}
+
+/**
+ * Get lesson with its module ID
+ */
+async function getLessonWithModule(lessonId: number) {
+	if (!lessonId) return null;
+
+	const lesson = await db.query.lessons.findFirst({
+		where: eq(lessons.id, lessonId)
+	});
+
+	if (!lesson) return null;
+
+	return {
+		lessonId: lesson.id,
+		moduleId: lesson.moduleId
+	};
+}
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const { lesson: lessonId, module: moduleId } = params;
@@ -28,7 +84,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		throw error(404, 'Lesson not found');
 	}
 
-	// Get module details if not already provided
+	// Get module details
 	const module = await db.query.modules.findFirst({
 		where: eq(modules.id, +moduleId)
 	});
@@ -37,33 +93,41 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		throw error(404, 'Module not found');
 	}
 
-	// Get subject info from module
+	// Get subject info
 	const subject = await db.query.subjects.findFirst({
 		where: eq(subjects.id, module.subjectId || 0)
 	});
 
-	// Get user progress for this lesson
-	const session = await locals.auth();
+	// Get navigation details
+	const [nextLesson, prevLesson] = await Promise.all([
+		lesson.nextLessonId ? getLessonWithModule(lesson.nextLessonId) : null,
+		lesson.prevLessonId ? getLessonWithModule(lesson.prevLessonId) : null
+	]);
+
+	// Get user progress
 	let progress = null;
+	const session = await locals.auth();
 
 	if (session?.user?.id) {
-		const progressEntries = await db.query.studentProgress.findMany({
+		const progressEntry = await db.query.studentProgress.findFirst({
 			where: and(
 				eq(studentProgress.studentId, session.user.id),
 				eq(studentProgress.lessonId, +lessonId)
 			)
 		});
 
-		if (progressEntries.length > 0) {
-			progress = progressEntries[0];
-		}
+		progress = progressEntry || null;
 	}
 
 	return {
 		lesson,
 		module,
 		subject,
-		progress
+		progress,
+		navigation: {
+			next: nextLesson,
+			prev: prevLesson
+		}
 	};
 };
 
@@ -81,7 +145,7 @@ export const actions: Actions = {
 
 		// Get the current date
 		const now = new Date();
-		const dateString = now.toISOString(); // Convert Date to string format
+		const dateString = now.toISOString();
 
 		try {
 			// Get the lesson first
@@ -111,7 +175,6 @@ export const actions: Actions = {
 					.set({
 						timeSpent: (existingProgress.timeSpent || 0) + timeSpent,
 						attempts: (existingProgress.attempts || 1) + 1,
-						// Always set completedAt to now, regardless of previous value
 						completedAt: now
 					})
 					.where(
@@ -121,13 +184,15 @@ export const actions: Actions = {
 						)
 					);
 			} else {
-				await db.insert(studentProgress).values({
-					studentId: session.user.id,
-					lessonId: lessonId,
-					timeSpent: timeSpent,
-					completedAt: now,
-					attempts: 1
-				});
+				await db
+					.insert(studentProgress)
+					.values({
+						studentId: session.user.id,
+						lessonId: lessonId,
+						timeSpent: timeSpent,
+						completedAt: now,
+						attempts: 1
+					});
 			}
 
 			// Update student profile
@@ -139,28 +204,29 @@ export const actions: Actions = {
 				await db
 					.update(studentProfiles)
 					.set({
-						totalStudyTime: (profile.totalStudyTime || 0) + timeSpent, // Add null check
-						lastActivityDate: dateString // Use string format instead of Date
+						totalStudyTime: (profile.totalStudyTime || 0) + timeSpent,
+						lastActivityDate: dateString
 					})
 					.where(eq(studentProfiles.studentId, session.user.id));
 			} else {
-				await db.insert(studentProfiles).values({
-					studentId: session.user.id,
-					totalStudyTime: timeSpent,
-					lastActivityDate: dateString, // Use string format instead of Date
-					currentStreak: 1,
-					points: 0,
-					rank: 'beginner'
-				});
+				await db
+					.insert(studentProfiles)
+					.values({
+						studentId: session.user.id,
+						totalStudyTime: timeSpent,
+						lastActivityDate: dateString,
+						currentStreak: 1,
+						points: 0,
+						rank: 'beginner'
+					});
 			}
 
 			// Award badges for first completion
 			let badges = [];
 
-			// If this is newly completed, award first-bite badge
+			// First bite badge
 			if (isNewlyCompleted) {
 				try {
-					// Count total completed lessons
 					const completedLessonsCount = await db
 						.select({ count: sql`COUNT(*)` })
 						.from(studentProgress)
@@ -174,7 +240,7 @@ export const actions: Actions = {
 					const totalCompleted = parseInt(
 						(completedLessonsCount[0] as { count: number }).count.toString()
 					);
-					// If this is their first ever completed lesson
+
 					if (totalCompleted === 1) {
 						const firstBiteBadge = await awardBadge(session.user.id, 'first-bite');
 						if (firstBiteBadge) {
@@ -188,22 +254,22 @@ export const actions: Actions = {
 						}
 					}
 				} catch (error) {
-					console.error('Failed to award First Bite badge:', error);
+					console.error(`Failed to award First Bite badge:`, error);
 				}
 			}
 
 			// Check if all lessons in the module are completed
 			const moduleCompleted = await isModuleCompleted(session.user.id, moduleId);
 
-			// If module is completed and this was the final lesson, award module completion badges
+			// If module is completed, award badges
 			if (moduleCompleted) {
-				console.log(`Module ${moduleId} completed, awarding badges...`);
+				// Award module badges
 				const moduleBadges = await awardModuleCompletionBadges(
 					session.user.id,
 					moduleId.toString()
 				);
 
-				// Add the awarded badges to the response
+				// Add badges to response
 				if (moduleBadges.length > 0) {
 					moduleBadges.forEach((badge) => {
 						const badgeData = badgeMap.get(badge.badgeId);
@@ -217,14 +283,18 @@ export const actions: Actions = {
 				}
 			}
 
+			// Find next module ID if current module is completed
+			const nextModuleId = moduleCompleted ? await findNextModuleId(moduleId) : null;
+
 			return {
 				success: true,
 				moduleCompleted,
 				badges,
-				nextLessonId: lesson.nextLessonId
+				nextLessonId: lesson.nextLessonId,
+				nextModuleId
 			};
 		} catch (error) {
-			console.error('Error updating progress:', error);
+			console.error(`Error updating progress:`, error);
 			return { success: false, error: 'Failed to mark lesson as complete' };
 		}
 	}

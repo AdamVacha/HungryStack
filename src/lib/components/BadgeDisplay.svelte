@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
-	import { earnedBadges, badgeProgress } from '$lib/badges/badgeStore';
+	import { earnedBadges, badgeProgress } from '$lib/badges/badges';
 	import { goto } from '$app/navigation';
 
 	const { limit = 5 } = $props();

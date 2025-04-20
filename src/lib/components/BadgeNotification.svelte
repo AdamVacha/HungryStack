@@ -8,7 +8,7 @@
 
 {#if visible}
 	<div class="fixed right-4 top-4 z-50 flex flex-col gap-3">
-		{#each $badgeNotifications as badge (badge.id)}
+		{#each $badgeNotifications as badge (badge.notificationId)}
 			<div
 				class="card variant-filled-primary w-80 p-4 shadow-lg"
 				in:fly={{ x: 30, duration: 500, easing: quintOut }}

@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import BadgeDisplay from '$lib/components/BadgeDisplay.svelte';
+	import CertificateDisplay from '$lib/components/CertificateDisplay.svelte';
 
 	let username = page?.data?.session?.user?.name ?? 'Guest';
 
@@ -105,29 +106,33 @@
 
 <main class="min-h-screen px-4 py-6 md:px-6 md:py-8 lg:py-10">
 	<section
-		class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-10 items-center justify-center md:py-6"
+		class="grid grid-cols-1 items-center justify-center gap-8 md:grid-cols-2 md:py-6 lg:grid-cols-10"
 	>
 		<!-- Welcome Message Column -->
-		<section class="md:col-span-1 lg:col-span-3 flex justify-center">
+		<section class="flex justify-center md:col-span-1 lg:col-span-3">
 			<div class="flex flex-col items-center md:space-x-4 md:p-4">
 				<!-- Speech Bubble -->
-				<div class="speech-bubble mb-4 w-full max-w-xs mx-auto">
+				<div class="speech-bubble mx-auto mb-4 w-full max-w-xs">
 					<p>
 						{@html speechBubbleText}
 					</p>
 				</div>
-				<img src="/images/mascot.png" alt="Mascot" class="relative h-48 md:h-64 lg:h-80 animate-bounce" />
+				<img
+					src="/images/mascot.png"
+					alt="Mascot"
+					class="relative h-48 animate-bounce md:h-64 lg:h-80"
+				/>
 			</div>
 		</section>
 
 		<!-- Pancake Stack Column -->
-		<section class="md:col-span-1 lg:col-span-7 px-4 md:p-4 lg:p-10">
+		<section class="px-4 md:col-span-1 md:p-4 lg:col-span-7 lg:p-10">
 			<div class="pancake-stack my-4 flex flex-col items-center text-gray-700">
 				<button
 					class="pancake html"
 					tabindex="0"
 					onmouseenter={() => updateMessage('html')}
-					ontouchstart={() => updateMessage('html')} 
+					ontouchstart={() => updateMessage('html')}
 					onmouseleave={() => updateMessage('default')}
 					ontouchend={() => updateMessage('default')}
 					onclick={() => navigateToLesson('html')}
@@ -142,7 +147,7 @@
 					class="pancake css"
 					tabindex="0"
 					onmouseenter={() => updateMessage('css')}
-					ontouchstart={() => updateMessage('css')} 
+					ontouchstart={() => updateMessage('css')}
 					onmouseleave={() => updateMessage('default')}
 					ontouchend={() => updateMessage('default')}
 					onclick={() => navigateToLesson('css')}
@@ -156,7 +161,7 @@
 					class="pancake javascript"
 					tabindex="0"
 					onmouseenter={() => updateMessage('javascript')}
-					ontouchstart={() => updateMessage('javascript')} 
+					ontouchstart={() => updateMessage('javascript')}
 					onmouseleave={() => updateMessage('default')}
 					ontouchend={() => updateMessage('default')}
 					onclick={() => navigateToLesson('javascript')}
@@ -170,7 +175,7 @@
 					class="pancake backend"
 					tabindex="0"
 					onmouseenter={() => updateMessage('backend')}
-					ontouchstart={() => updateMessage('backend')} 
+					ontouchstart={() => updateMessage('backend')}
 					onmouseleave={() => updateMessage('default')}
 					ontouchend={() => updateMessage('default')}
 					onclick={() => navigateToLesson('backend')}
@@ -183,33 +188,17 @@
 			</div>
 		</section>
 	</section>
-	
+
 	<!-- Achievements Section -->
-	<section class="mt-8 md:mt-0 lg:mt-[-2rem] flex flex-col md:flex-row justify-center gap-8 p-4">
+	<section class="mt-8 flex flex-col justify-center gap-8 p-4 md:mt-0 md:flex-row lg:mt-[-2rem]">
 		<!-- Badge Display Component -->
 		<div class="w-full md:w-1/2 lg:max-w-3xl">
 			<BadgeDisplay limit={5} />
 		</div>
 
-		<div class="card w-full md:w-1/2 lg:max-w-3xl p-6 shadow">
-			<h2
-				class="mb-2 bg-gradient-to-br from-red-500 to-yellow-500 box-decoration-clone bg-clip-text text-center text-2xl font-semibold text-transparent"
-			>
-				Your Certificates
-			</h2>
-			<ul class="space-y-4">
-				{#each certificates as certificate}
-					<li class="flex items-center space-x-4">
-						<div class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 flex-shrink-0">
-							🏆
-						</div>
-						<div>
-							<p class="font-semibold">{certificate.title}</p>
-							<p class="text-sm">{certificate.description}</p>
-						</div>
-					</li>
-				{/each}
-			</ul>
+		<!-- Certificate Display Component - Replace your existing certificates card -->
+		<div class="w-full md:w-1/2 lg:max-w-3xl">
+			<CertificateDisplay />
 		</div>
 	</section>
 </main>
@@ -327,21 +316,21 @@
 			top: -10px;
 			left: calc(50% - 40px);
 		}
-		
+
 		.pancake {
 			padding: 12px;
 		}
-		
+
 		.progress-bar {
 			height: 8px;
 		}
 	}
-	
+
 	@media (min-width: 768px) {
 		.speech-bubble {
 			font-size: 1.1rem;
 		}
-		
+
 		.butter {
 			width: 110px;
 			height: 28px;
@@ -349,7 +338,7 @@
 			left: calc(50% - 55px);
 		}
 	}
-	
+
 	@media (min-width: 1024px) {
 		.butter {
 			width: 130px;
@@ -357,16 +346,16 @@
 			top: -15px;
 			left: calc(50% - 65px);
 		}
-		
+
 		.pancake {
 			width: 80%;
 			padding: 20px;
 		}
-		
+
 		.pancake-stack {
 			gap: 0;
 		}
-		
+
 		.progress-bar {
 			height: 10px;
 		}
