@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { badgesByCategory, earnedBadges, badgeProgress } from '$lib/badges/badgeStore';
-	import { badgeCategories, allBadges } from '$lib/badges/badgeSystem';
+	import { badgesByCategory, earnedBadges, badgeProgress } from '$lib/badges/badges';
+	import { badgeCategories, allBadges } from '$lib/badges/badges';
 	import { ProgressRadial } from '@skeletonlabs/skeleton';
 
 	// Define types

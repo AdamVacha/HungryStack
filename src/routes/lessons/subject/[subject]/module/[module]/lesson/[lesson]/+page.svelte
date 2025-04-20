@@ -1,13 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
-	import {
-		showBadgeNotification,
-		showMultipleBadgeNotifications
-	} from '$lib/badges/badgeNotification';
 	import BadgeNotification from '$lib/components/BadgeNotification.svelte';
 	import { goto } from '$app/navigation';
-	import { awardModuleCompletionBadges, hasBadge, refreshBadgeData } from '$lib/badges/badgeStore';
+	import { refreshBadgeData } from '$lib/badges/badges';
+	import { showBadgeNotification } from '$lib/badges/badgeNotification';
 
 	// CodeMirror imports
 	import { basicSetup } from 'codemirror';
@@ -18,8 +15,6 @@
 	import { css } from '@codemirror/lang-css';
 	import { sql } from '@codemirror/lang-sql';
 	import { oneDark } from '@codemirror/theme-one-dark';
-	import { page } from '$app/state';
-	import { moduleToBasicBadgeMap, badgeMap, type Badge } from '$lib/badges/badgeSystem';
 
 	// Get page data from loader
 	let { data } = $props<{ data: PageData }>();
@@ -28,14 +23,18 @@
 	let lesson = $derived(data?.lesson);
 	let module = $derived(data?.module);
 	let subject = $derived(data?.subject);
+	let navigation = $derived(data?.navigation || { next: null, prev: null });
 
 	// CodeMirror editor state
 	let editorContainer: HTMLDivElement | null = null;
 	let editorView: EditorView;
 
-	// Local state for editor - initialize with a default value first
+	// Local state for editor and UI
 	let code = $state('');
-	let isCodePanelHorizontal = $state(window.innerWidth >= 768); // Default to vertical on mobile
+	let isCodePanelHorizontal = $state(window.innerWidth >= 768);
+	let isCompleted = $state(data?.progress ? data.progress.completedAt !== null : false);
+	let timeSpent = $state(0);
+	let timeTracker: number | undefined;
 
 	// Set initial code value after lesson data is available
 	$effect(() => {
@@ -125,18 +124,21 @@
 		}
 	}
 
-	// init iframe
-	let iframeSrc = $derived(`data:text/html;charset=utf-8,${encodeURIComponent(code)}`);
+	// Update iframe preview
+	function updateIframePreview() {
+		const iframe = document.getElementById('live-preview-iframe') as HTMLIFrameElement;
+		if (iframe) {
+			iframe.src = `data:text/html;charset=utf-8,${encodeURIComponent(code)}`;
+		}
+	}
 
-	// Progress tracking
-	let isCompleted = $state(data?.progress ? data.progress.completedAt !== null : false);
-	let timeSpent = $state(0);
-	let timeTracker: number | undefined;
+	// Initialize iframe
+	let iframeSrc = $derived(`data:text/html;charset=utf-8,${encodeURIComponent(code)}`);
 
 	// Start tracking time spent on the lesson
 	onMount(() => {
 		createCodeMirrorEditor();
-		
+
 		// Add resize listener
 		window.addEventListener('resize', handleResize);
 
@@ -153,24 +155,21 @@
 		};
 	});
 
-	// Mark lesson as completed
+	/**
+	 * Mark lesson as completed and return the response
+	 */
 	async function markLessonComplete() {
-		if (isCompleted || !lesson?.id) {
-			console.log('Skipping markLessonComplete - already completed or no lesson ID');
-			return;
-		}
+		if (isCompleted || !lesson?.id) return;
 
 		try {
-			console.log(`Marking lesson ${lesson.id} as complete`);
-
-			// Create FormData
-			const formData = new FormData();
-			formData.append('timeSpent', timeSpent.toString());
+			// Create FormData for the request
+			const requestFormData = new FormData();
+			requestFormData.append('timeSpent', timeSpent.toString());
 
 			// Use the form action
 			const response = await fetch(`?/markComplete`, {
 				method: 'POST',
-				body: formData
+				body: requestFormData
 			});
 
 			if (!response.ok) {
@@ -181,112 +180,79 @@
 
 			// Parse result
 			const result = await response.json();
-			console.log('Server response:', result);
 
-			try {
-				// Parse the response data if needed
-				let parsedData;
-				if (typeof result.data === 'string') {
-					parsedData = JSON.parse(result.data);
-				} else {
-					parsedData = result.form || result;
-				}
+			// Process badge notifications
+			processBadgeNotifications(result);
 
-				// Check for module completion
-				const moduleCompleted =
-					result.form?.moduleCompleted === 1 ||
-					(parsedData[0] && parsedData[0].moduleCompleted === 1);
+			// Refresh badge data in background
+			await refreshBadgeData();
 
-				if (moduleCompleted && module?.id) {
-					console.log(`Module ${module.id} was completed!`);
-
-					// Get badge ID for this module
-					const badgeId = moduleToBasicBadgeMap[module.id.toString()];
-
-					if (badgeId) {
-						// Get badge details from the badge map
-						const badgeDetails = badgeMap.get(badgeId);
-
-						if (badgeDetails) {
-							// Create a badge object with current date
-							const badge: Badge = {
-								...badgeDetails,
-								dateEarned: new Date()
-							};
-
-							console.log('Showing badge notification for module completion:', badge);
-							showBadgeNotification(badge);
-
-							// For stack-starter badge (first module completion)
-							const hasStackStarterBadge = hasBadge('stack-starter');
-							if (!hasStackStarterBadge) {
-								const stackStarterBadge = badgeMap.get('stack-starter');
-								if (stackStarterBadge) {
-									setTimeout(() => {
-										const badge: Badge = {
-											...stackStarterBadge,
-											dateEarned: new Date()
-										};
-										showBadgeNotification(badge);
-									}, 2000);
-								}
-							}
-						}
-					}
-
-					// Refresh badges from server (in background, after showing notifications)
-					refreshBadgeData();
-				}
-
-				// Check if this was the first lesson completion
-				const firstLesson = parsedData[0] && parsedData[0].success === 1 && !moduleCompleted;
-
-				if (firstLesson) {
-					// Show first-bite badge if user doesn't already have it
-					const hasFirstBiteBadge = hasBadge('first-bite');
-					if (!hasFirstBiteBadge) {
-						const firstBiteBadge = badgeMap.get('first-bite');
-						if (firstBiteBadge) {
-							const badge: Badge = {
-								...firstBiteBadge,
-								dateEarned: new Date()
-							};
-							console.log('Showing first-bite badge notification:', badge);
-							showBadgeNotification(badge);
-						}
-					}
-				}
-			} catch (parseError) {
-				console.error('Error processing badge notifications:', parseError);
-			}
+			return result;
 		} catch (error) {
 			console.error('Failed to mark lesson as complete:', error);
+			return null;
 		}
 	}
 
-	// Update iframe preview
-	function updateIframePreview() {
-		const iframe = document.getElementById('live-preview-iframe') as HTMLIFrameElement;
-		if (iframe) {
-			iframe.src = `data:text/html;charset=utf-8,${encodeURIComponent(code)}`;
+	/**
+	 * Process badge notifications from server response
+	 */
+	function processBadgeNotifications(result: { data: string }) {
+		if (result?.data && typeof result.data === 'string') {
+			try {
+				const parsedData = JSON.parse(result.data);
+
+				// Check if we have badge data in the response
+				if (parsedData[4] && typeof parsedData[4] === 'string') {
+					const badge = {
+						id: parsedData[4],
+						title: parsedData[5] || 'New Badge',
+						description: parsedData[6] || 'You earned a new badge!',
+						image: parsedData[7] || `/badges/${parsedData[4]}.png`,
+						category: parsedData[8] || 'achievement',
+						dateEarned: new Date()
+					};
+
+					// Show notification for this badge
+					setTimeout(() => {
+						showBadgeNotification(badge);
+					}, 500);
+				}
+			} catch (error) {
+				console.error('Error processing badge notification:', error);
+			}
 		}
 	}
 
-	// Navigation functions
+	/**
+	 * Navigate to the next lesson
+	 */
 	async function goToNextLesson() {
-		await markLessonComplete();
+		// Mark the lesson complete if it's not already
+		if (!isCompleted) {
+			await markLessonComplete();
+		}
 
-		if (lesson?.nextLessonId) {
-			goto(`/lessons/subject/${subject.id}/module/${module.id}/lesson/${lesson.nextLessonId}`, {
+		const nextInfo = navigation.next;
+		if (nextInfo && nextInfo.lessonId) {
+			const nextModuleId = nextInfo.moduleId || module.id;
+
+			goto(`/lessons/subject/${subject.id}/module/${nextModuleId}/lesson/${nextInfo.lessonId}`, {
 				noScroll: true,
 				replaceState: false
 			});
 		}
 	}
 
+	/**
+	 * Navigate to the previous lesson
+	 */
 	async function goToPreviousLesson() {
-		if (lesson?.prevLessonId) {
-			goto(`/lessons/subject/${subject.id}/module/${module.id}/lesson/${lesson.prevLessonId}`, {
+		const prevInfo = navigation.prev;
+		if (prevInfo && prevInfo.lessonId) {
+			const prevModuleId = prevInfo.moduleId || module.id;
+
+			goto(`/lessons/subject/${subject.id}/module/${prevModuleId}/lesson/${prevInfo.lessonId}`, {
 				noScroll: true,
 				replaceState: false
 			});
@@ -297,11 +263,13 @@
 <BadgeNotification />
 
 <div
-	class="flex h-screen w-full flex-1 flex-col rounded-lg bg-surface-300 p-2 sm:p-4 md:p-6 shadow-lg dark:bg-gray-900 overflow-hidden"
+	class="flex h-screen w-full flex-1 flex-col overflow-hidden rounded-lg bg-surface-300 p-2 shadow-lg sm:p-4 md:p-6 dark:bg-gray-900"
 >
 	<header class="mb-2 sm:mb-4 md:mb-6">
-		<div class="mb-1 flex items-center">
-			<h1 class="text-xl sm:text-2xl md:text-3xl font-bold truncate">{lesson?.title || 'Loading...'}</h1>
+		<div class="mb-1 flex items-center justify-between">
+			<h1 class="truncate text-xl font-bold sm:text-2xl md:text-3xl">
+				{lesson?.title || 'Loading...'}
+			</h1>
 		</div>
 		<div class:hidden={lesson?.id !== 1}>
 			<p class="text-sm sm:text-base">Modify the code below and see the result in real time!</p>
@@ -310,15 +278,17 @@
 
 	<!-- Code Editor and Preview -->
 	<div
-		class="grid flex-1 gap-2 sm:gap-4 md:gap-6 overflow-hidden"
+		class="grid flex-1 gap-2 overflow-hidden sm:gap-4 md:gap-6"
 		class:grid-cols-1={!isCodePanelHorizontal}
 		class:grid-rows-2={!isCodePanelHorizontal}
 		class:grid-cols-2={isCodePanelHorizontal}
 	>
 		<!-- Code Editor -->
-		<div class="flex flex-col overflow-hidden rounded-lg bg-surface-100 dark:bg-gray-800 min-h-[200px]">
-			<header class="flex items-center justify-between px-2 sm:px-4 py-1 sm:py-2 dark:bg-gray-700">
-				<h2 class="text-base sm:text-lg font-medium">Code Editor</h2>
+		<div
+			class="flex min-h-[200px] flex-col overflow-hidden rounded-lg bg-surface-100 dark:bg-gray-800"
+		>
+			<header class="flex items-center justify-between px-2 py-1 sm:px-4 sm:py-2 dark:bg-gray-700">
+				<h2 class="text-base font-medium sm:text-lg">Code Editor</h2>
 				<button
 					onclick={() => (isCodePanelHorizontal = !isCodePanelHorizontal)}
 					class="rounded p-1 transition-colors hover:bg-gray-600"
@@ -353,9 +323,9 @@
 		</div>
 
 		<!-- Live Preview -->
-		<div class="flex flex-col overflow-hidden rounded-lg min-h-[200px]">
-			<header class="bg-surface-100 px-2 sm:px-4 py-1 sm:py-2 dark:bg-gray-700">
-				<h2 class="text-base sm:text-lg font-medium">Live Preview</h2>
+		<div class="flex min-h-[200px] flex-col overflow-hidden rounded-lg">
+			<header class="bg-surface-100 px-2 py-1 sm:px-4 sm:py-2 dark:bg-gray-700">
+				<h2 class="text-base font-medium sm:text-lg">Live Preview</h2>
 			</header>
 			<div class="flex-1 bg-white">
 				<iframe
@@ -369,9 +339,9 @@
 	</div>
 
 	<!-- Navigation Buttons -->
-	<footer class="mt-2 sm:mt-4 md:mt-6 flex justify-between">
+	<footer class="mt-2 flex justify-between sm:mt-4 md:mt-6">
 		<button
-			class="flex items-center gap-1 sm:gap-2 rounded-lg bg-gray-700 px-2 sm:px-4 md:px-6 py-2 sm:py-3 text-sm sm:text-base text-white transition-colors hover:bg-gray-600"
+			class="flex items-center gap-1 rounded-lg bg-gray-700 px-2 py-2 text-sm text-white transition-colors hover:bg-gray-600 sm:gap-2 sm:px-4 sm:py-3 sm:text-base md:px-6"
 			onclick={goToPreviousLesson}
 			disabled={!lesson?.prevLessonId}
 			class:opacity-50={!lesson?.prevLessonId}
@@ -391,12 +361,12 @@
 			>
 				<path d="m15 18-6-6 6-6" />
 			</svg>
-			<span class="hidden xs:inline">Previous</span>
+			<span class="xs:inline hidden">Previous</span>
 		</button>
 
 		<div>
 			<button
-				class="rounded-lg px-2 sm:px-4 md:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium text-white transition-colors"
+				class="rounded-lg px-2 py-2 text-sm font-medium text-white transition-colors sm:px-4 sm:py-3 sm:text-base md:px-6"
 				class:bg-green-600={!isCompleted}
 				class:hover:bg-green-500={!isCompleted}
 				class:bg-gray-400={isCompleted}
@@ -409,13 +379,13 @@
 		</div>
 
 		<button
-			class="flex items-center gap-1 sm:gap-2 rounded-lg bg-tertiary-500 px-2 sm:px-4 md:px-6 py-2 sm:py-3 text-sm sm:text-base text-white transition-colors hover:bg-tertiary-400"
+			class="flex items-center gap-1 rounded-lg bg-tertiary-500 px-2 py-2 text-sm text-white transition-colors hover:bg-tertiary-400 sm:gap-2 sm:px-4 sm:py-3 sm:text-base md:px-6"
 			onclick={goToNextLesson}
 			disabled={!lesson?.nextLessonId}
 			class:opacity-50={!lesson?.nextLessonId}
 			class:cursor-not-allowed={!lesson?.nextLessonId}
 		>
-			<span class="hidden xs:inline">Next</span>
+			<span class="xs:inline hidden">Next</span>
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
 				width="16"

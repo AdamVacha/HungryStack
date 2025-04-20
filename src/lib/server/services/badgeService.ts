@@ -1,36 +1,27 @@
+// src/lib/server/services/badgeService.ts
 import { db } from '$lib/server/db';
 import { achievements, studentAchievements, users, modules, studentProgress, lessons } from '$lib/server/db/schema';
 import { eq, and, sql, inArray } from 'drizzle-orm';
-import {
-    allBadges,
-    badgeMap,
-    initializeUserBadges,
-    moduleToBasicBadgeMap,
-    type Badge
-} from '$lib/badges/badgeSystem';
+import { allBadges, moduleToBasicBadgeMap } from '$lib/badges/badges';
 
-// A simple mutex to prevent race conditions when awarding badges
+// Mutex for preventing race conditions
 const awardingBadges = new Map<string, boolean>();
 
-// seed achievements from the badge system to the database
+// Core functions - seed achievements, get user badges, etc.
 export async function seedAchievements() {
-    // First check if there are already achievements in the database
     const existingCount = await db.select({ count: { value: achievements.id } }).from(achievements);
-
-    if (existingCount[0]?.count?.value > 0) {
-        return;
-    }
-
-    // insert all badges from the badge system into the database
-    const achievementsData = allBadges.map((badge) => ({
+    if (existingCount[0]?.count?.value > 0) return;
+    
+    // Insert all badges
+    const achievementsData = allBadges.map(badge => ({
         badgeId: badge.id,
         title: badge.title,
         description: badge.description,
         badgeIcon: badge.image,
         category: badge.category,
-        requiredPoints: 0 // Default value
+        requiredPoints: 0
     }));
-
+    
     try {
         await db.insert(achievements).values(achievementsData);
         console.log('Achievements seeded successfully');
@@ -40,10 +31,9 @@ export async function seedAchievements() {
     }
 }
 
-// Get all user badges with details
-export async function getUserBadges(userId: string): Promise<any[]> {
+export async function getUserBadges(userId: string) {
     if (!userId) return [];
-
+    
     try {
         return await db
             .select({
@@ -63,25 +53,24 @@ export async function getUserBadges(userId: string): Promise<any[]> {
     }
 }
 
-// Check if user has a specific badge
-export async function hasBadge(userId: string, badgeId: string): Promise<boolean> {
+export async function hasBadge(userId: string, badgeId: string) {
     if (!userId || !badgeId) return false;
-
+    
     try {
         const badge = await db
             .select({ id: achievements.id })
             .from(achievements)
             .where(eq(achievements.badgeId, badgeId))
             .limit(1);
-
+            
         if (!badge.length) return false;
-
+        
         const achievementId = badge[0].id;
         if (typeof achievementId !== 'number') {
             console.error(`Invalid achievement ID for badge ${badgeId}`);
             return false;
         }
-
+        
         const userBadge = await db
             .select()
             .from(studentAchievements)
@@ -92,7 +81,7 @@ export async function hasBadge(userId: string, badgeId: string): Promise<boolean
                 )
             )
             .limit(1);
-
+            
         return userBadge.length > 0;
     } catch (error) {
         console.error(`Error checking if user has badge ${badgeId}:`, error);
@@ -100,16 +89,14 @@ export async function hasBadge(userId: string, badgeId: string): Promise<boolean
     }
 }
 
-export async function awardBadge(userId: string, badgeId: string): Promise<any | null> {
+export async function awardBadge(userId: string, badgeId: string) {
     if (!userId || !badgeId) {
         console.error('User ID and Badge ID are required');
         return null;
     }
-
-    // Create a unique key for this user+badge combination
-    const lockKey = `${userId}-${badgeId}`;
     
-    // Check if we're already in the process of awarding this badge to this user
+    // Create lock key and check if already awarding
+    const lockKey = `${userId}-${badgeId}`;
     if (awardingBadges.get(lockKey)) {
         console.log(`Badge ${badgeId} is already being awarded to user ${userId}`);
         return null;
@@ -119,28 +106,28 @@ export async function awardBadge(userId: string, badgeId: string): Promise<any |
         // Set the lock
         awardingBadges.set(lockKey, true);
         
-        // First check if the badge exists
+        // Check if badge exists
         const badge = await db
             .select()
             .from(achievements)
             .where(eq(achievements.badgeId, badgeId))
             .limit(1);
-
+            
         if (!badge.length) {
             console.error(`Badge with ID ${badgeId} not found`);
             return null;
         }
-
+        
         const achievementId = badge[0].id;
-
-        // Check if user already has this badge
+        
+        // Check if user already has badge
         const alreadyHasBadge = await hasBadge(userId, badgeId);
         if (alreadyHasBadge) {
             console.log(`User ${userId} already has badge ${badgeId}`);
-            return null; // User already has this badge
+            return null;
         }
-
-        // Add badge to user within a transaction
+        
+        // Add badge to user within transaction
         await db.transaction(async (tx) => {
             await tx.insert(studentAchievements).values({
                 studentId: userId,
@@ -148,17 +135,18 @@ export async function awardBadge(userId: string, badgeId: string): Promise<any |
                 earnedAt: new Date()
             });
         });
-
+        
         console.log(`Badge ${badgeId} awarded to user ${userId}`);
         return badge[0];
     } catch (error) {
         console.error(`Error awarding badge ${badgeId} to user ${userId}:`, error);
         return null;
     } finally {
-        // Always release the lock
+        // Release the lock
         awardingBadges.set(lockKey, false);
     }
 }
+
 
 export async function getBadgeProgress(userId: string) {
     if (!userId) {
@@ -218,6 +206,7 @@ export async function isModuleCompleted(userId: string, moduleId: number | strin
     }
 }
 
+// Updated to only return newly awarded badges
 export async function awardModuleCompletionBadges(userId: string, moduleId: string): Promise<any[]> {
     if (!userId || !moduleId) {
         console.error('User ID and Module ID are required');
@@ -226,7 +215,7 @@ export async function awardModuleCompletionBadges(userId: string, moduleId: stri
     
     console.log(`Checking module completion and awarding badges for module ${moduleId} to user ${userId}`);
 
-    const awardedBadges = [];
+    const newlyAwardedBadges = []; // Only store newly awarded badges
 
     try {
         // First verify the module is actually completed
@@ -237,18 +226,23 @@ export async function awardModuleCompletionBadges(userId: string, moduleId: stri
             return [];
         }
         
-        console.log(`Module ${moduleId} is completed by user ${userId}, awarding badges`);
+        console.log(`Module ${moduleId} is completed by user ${userId}, checking badges`);
 
         // Award the specific module badge
         const badgeId = moduleToBasicBadgeMap[moduleId];
         if (badgeId) {
-            console.log(`Awarding badge ${badgeId} for module ${moduleId}`);
-            const badge = await awardBadge(userId, badgeId);
-            if (badge) {
-                awardedBadges.push(badge);
-                console.log(`Badge ${badgeId} awarded successfully`);
+            // Check if user already has this badge first
+            const alreadyHasBadge = await hasBadge(userId, badgeId);
+            
+            if (!alreadyHasBadge) {
+                console.log(`Awarding badge ${badgeId} for module ${moduleId}`);
+                const badge = await awardBadge(userId, badgeId);
+                if (badge) {
+                    newlyAwardedBadges.push(badge);
+                    console.log(`Badge ${badgeId} awarded successfully`);
+                }
             } else {
-                console.log(`Failed to award badge ${badgeId} or user already has it`);
+                console.log(`User already has badge ${badgeId}, not awarding again`);
             }
         } else {
             console.log(`No badge defined for module ${moduleId}`);
@@ -257,21 +251,22 @@ export async function awardModuleCompletionBadges(userId: string, moduleId: stri
         // Check for other achievement badges
         // We'll run these in parallel since each has its own mutex
         await Promise.all([
-            checkMasteryBadges(userId),
-            awardFirstTimeBadges(userId),
-            checkFullStackFlipper(userId),
-            checkHalfwayChef(userId),
-            checkStackMaster(userId)
+            checkMasteryBadges(userId, newlyAwardedBadges),
+            awardFirstTimeBadges(userId, newlyAwardedBadges),
+            checkFullStackFlipper(userId, newlyAwardedBadges),
+            checkHalfwayChef(userId, newlyAwardedBadges),
+            checkStackMaster(userId, newlyAwardedBadges)
         ]);
 
-        return awardedBadges;
+        return newlyAwardedBadges; // Only return newly awarded badges
     } catch (error) {
         console.error(`Error awarding badges for module ${moduleId} completion:`, error);
-        return awardedBadges; // Return any badges we managed to award
+        return newlyAwardedBadges; // Return any badges we managed to award
     }
 }
 
-async function checkMasteryBadges(userId: string): Promise<void> {
+// Modified to add newly awarded badges to the array
+async function checkMasteryBadges(userId: string, newlyAwardedBadges: any[]): Promise<void> {
     try {
         // Check HTML mastery
         const htmlBadges = ['html-rookie', 'html-apprentice', 'html-professional'];
@@ -279,8 +274,9 @@ async function checkMasteryBadges(userId: string): Promise<void> {
             htmlBadges.map(badge => hasBadge(userId, badge))
         ).then(results => results.every(Boolean));
 
-        if (hasAllHtmlBadges) {
-            await awardBadge(userId, 'html-master');
+        if (hasAllHtmlBadges && !(await hasBadge(userId, 'html-master'))) {
+            const badge = await awardBadge(userId, 'html-master');
+            if (badge) newlyAwardedBadges.push(badge);
         }
 
         // Check CSS mastery
@@ -289,8 +285,9 @@ async function checkMasteryBadges(userId: string): Promise<void> {
             cssBadges.map(badge => hasBadge(userId, badge))
         ).then(results => results.every(Boolean));
 
-        if (hasAllCssBadges) {
-            await awardBadge(userId, 'css-master');
+        if (hasAllCssBadges && !(await hasBadge(userId, 'css-master'))) {
+            const badge = await awardBadge(userId, 'css-master');
+            if (badge) newlyAwardedBadges.push(badge);
         }
 
         // Check JS mastery
@@ -299,8 +296,9 @@ async function checkMasteryBadges(userId: string): Promise<void> {
             jsBadges.map(badge => hasBadge(userId, badge))
         ).then(results => results.every(Boolean));
 
-        if (hasAllJsBadges) {
-            await awardBadge(userId, 'js-master');
+        if (hasAllJsBadges && !(await hasBadge(userId, 'js-master'))) {
+            const badge = await awardBadge(userId, 'js-master');
+            if (badge) newlyAwardedBadges.push(badge);
         }
 
         // Check backend mastery
@@ -309,15 +307,17 @@ async function checkMasteryBadges(userId: string): Promise<void> {
             backendBadges.map(badge => hasBadge(userId, badge))
         ).then(results => results.every(Boolean));
 
-        if (hasAllBackendBadges) {
-            await awardBadge(userId, 'backend-master');
+        if (hasAllBackendBadges && !(await hasBadge(userId, 'backend-master'))) {
+            const badge = await awardBadge(userId, 'backend-master');
+            if (badge) newlyAwardedBadges.push(badge);
         }
     } catch (error) {
         console.error('Error checking mastery badges:', error);
     }
 }
 
-async function awardFirstTimeBadges(userId: string): Promise<void> {
+// Modified to add newly awarded badges to the array
+async function awardFirstTimeBadges(userId: string, newlyAwardedBadges: any[]): Promise<void> {
     try {
         // First check if user already has these badges
         const [hasFirstBite, hasStackStarter] = await Promise.all([
@@ -327,7 +327,8 @@ async function awardFirstTimeBadges(userId: string): Promise<void> {
         
         // Award first-bite if needed
         if (!hasFirstBite) {
-            await awardBadge(userId, 'first-bite');
+            const badge = await awardBadge(userId, 'first-bite');
+            if (badge) newlyAwardedBadges.push(badge);
         }
         
         // For stack-starter, we need to check if the user has at least one module badge
@@ -341,7 +342,8 @@ async function awardFirstTimeBadges(userId: string): Promise<void> {
             ).then(results => results.some(Boolean));
             
             if (hasAnyModuleBadge) {
-                await awardBadge(userId, 'stack-starter');
+                const badge = await awardBadge(userId, 'stack-starter');
+                if (badge) newlyAwardedBadges.push(badge);
             }
         }
     } catch (error) {
@@ -349,7 +351,8 @@ async function awardFirstTimeBadges(userId: string): Promise<void> {
     }
 }
 
-async function checkFullStackFlipper(userId: string): Promise<void> {
+// Modified to add newly awarded badges to the array
+async function checkFullStackFlipper(userId: string, newlyAwardedBadges: any[]): Promise<void> {
     try {
         // Check if user already has the badge
         const hasFullStackFlipper = await hasBadge(userId, 'full-stack-flipper');
@@ -390,15 +393,16 @@ async function checkFullStackFlipper(userId: string): Promise<void> {
             hasJsBadge.length > 0 &&
             hasBackendBadge.length > 0
         ) {
-            await awardBadge(userId, 'full-stack-flipper');
+            const badge = await awardBadge(userId, 'full-stack-flipper');
+            if (badge) newlyAwardedBadges.push(badge);
         }
     } catch (error) {
         console.error('Error checking full stack flipper badge:', error);
     }
 }
 
-// Checks if user has completed 50% of all modules
-async function checkHalfwayChef(userId: string): Promise<void> {
+// Modified to add newly awarded badges to the array
+async function checkHalfwayChef(userId: string, newlyAwardedBadges: any[]): Promise<void> {
     try {
         // Check if user already has the badge
         const hasHalfwayChef = await hasBadge(userId, 'halfway-chef');
@@ -415,15 +419,16 @@ async function checkHalfwayChef(userId: string): Promise<void> {
         const completedModules = badgeResults.filter(Boolean).length;
         
         if (completedModules >= Math.floor(totalModules / 2)) {
-            await awardBadge(userId, 'halfway-chef');
+            const badge = await awardBadge(userId, 'halfway-chef');
+            if (badge) newlyAwardedBadges.push(badge);
         }
     } catch (error) {
         console.error('Error checking halfway chef badge:', error);
     }
 }
 
-// Checks if user has completed all modules
-async function checkStackMaster(userId: string): Promise<void> {
+// Modified to add newly awarded badges to the array
+async function checkStackMaster(userId: string, newlyAwardedBadges: any[]): Promise<void> {
     try {
         // Check if user already has the badge
         const hasStackMaster = await hasBadge(userId, 'stack-master');
@@ -439,7 +444,8 @@ async function checkStackMaster(userId: string): Promise<void> {
         const allComplete = badgeResults.every(Boolean);
         
         if (allComplete) {
-            await awardBadge(userId, 'stack-master');
+            const badge = await awardBadge(userId, 'stack-master');
+            if (badge) newlyAwardedBadges.push(badge);
         }
     } catch (error) {
         console.error('Error checking stack master badge:', error);

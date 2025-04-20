@@ -11,7 +11,7 @@
 	import { storePopup } from '@skeletonlabs/skeleton';
 	import type { PopupSettings } from '@skeletonlabs/skeleton';
 	storePopup.set({ computePosition, autoUpdate, offset, shift, flip, arrow });
-	import { initBadgeStore } from '$lib/badges/badgeStore';
+	import { initBadgeStore } from '$lib/badges/badges';
 	import { onMount } from 'svelte';
 
 	onMount(() => {
