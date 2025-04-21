@@ -3,6 +3,7 @@
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import html2canvas from 'html2canvas';
 
 	// Get certificate ID from params
 	let certificateId = $derived(parseInt($page.params.id));
@@ -34,13 +35,42 @@
 	}
 
 	// Save certificate as image
-	function saveCertificate() {
+	async function saveCertificate() {
 		if (!certificate) return;
 
-		setTimeout(() => {
+		try {
 			showSaveButton = false;
-			alert('Certificate downloaded!');
-		}, 1000);
+
+			// Get the certificate container element
+			const certificateElement = document.getElementById('certificate-container');
+			if (!certificateElement) {
+				throw new Error('Certificate element not found');
+			}
+
+			// Create a canvas from the certificate element
+			const canvas = await html2canvas(certificateElement.firstElementChild as HTMLElement);
+			// Convert the canvas to a data URL
+			const dataUrl = canvas.toDataURL('image/png');
+
+			// Create a download link
+			const downloadLink = document.createElement('a');
+			downloadLink.href = dataUrl;
+			downloadLink.download = `${certificate.title}_certificate.png`;
+
+			// Trigger the download
+			document.body.appendChild(downloadLink);
+			downloadLink.click();
+			document.body.removeChild(downloadLink);
+
+			// Provide feedback to the user
+			setTimeout(() => {
+				showSaveButton = true;
+			}, 3000); // Show the button again after 3 seconds
+		} catch (error) {
+			console.error('Error saving certificate:', error);
+			alert('Failed to download certificate. Please try again.');
+			showSaveButton = true;
+		}
 	}
 
 	// Navigate back to dashboard
@@ -97,7 +127,23 @@
 					Save as Image
 				</button>
 			{:else}
-				<span class="text-success-500">✓ Downloaded</span>
+				<span class="flex items-center text-success-500">
+					<svg
+						class="mr-2 h-5 w-5 animate-spin"
+						xmlns="http://www.w3.org/2000/svg"
+						fill="none"
+						viewBox="0 0 24 24"
+					>
+						<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"
+						></circle>
+						<path
+							class="opacity-75"
+							fill="currentColor"
+							d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+						></path>
+					</svg>
+					Generating certificate...
+				</span>
 			{/if}
 		</div>
 
