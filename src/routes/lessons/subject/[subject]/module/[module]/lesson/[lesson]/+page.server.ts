@@ -14,6 +14,10 @@ import {
 	awardModuleCompletionBadges,
 	isModuleCompleted
 } from '$lib/server/services/badgeService';
+import {
+	isSubjectCompleted,
+	checkAndAwardSubjectCertificates
+} from '$lib/server/services/certificateService';
 import { badgeMap } from '$lib/badges/badges';
 
 /**
@@ -38,12 +42,7 @@ async function findNextModuleId(currentModuleId: number): Promise<number | null>
 		const nextModule = await db
 			.select({ id: modules.id })
 			.from(modules)
-			.where(
-				and(
-					eq(modules.subjectId, subjectId),
-					gt(modules.orderInSubject, orderInSubject || 0)
-				)
-			)
+			.where(and(eq(modules.subjectId, subjectId), gt(modules.orderInSubject, orderInSubject || 0)))
 			.orderBy(modules.orderInSubject)
 			.limit(1);
 
@@ -184,15 +183,13 @@ export const actions: Actions = {
 						)
 					);
 			} else {
-				await db
-					.insert(studentProgress)
-					.values({
-						studentId: session.user.id,
-						lessonId: lessonId,
-						timeSpent: timeSpent,
-						completedAt: now,
-						attempts: 1
-					});
+				await db.insert(studentProgress).values({
+					studentId: session.user.id,
+					lessonId: lessonId,
+					timeSpent: timeSpent,
+					completedAt: now,
+					attempts: 1
+				});
 			}
 
 			// Update student profile
@@ -209,16 +206,14 @@ export const actions: Actions = {
 					})
 					.where(eq(studentProfiles.studentId, session.user.id));
 			} else {
-				await db
-					.insert(studentProfiles)
-					.values({
-						studentId: session.user.id,
-						totalStudyTime: timeSpent,
-						lastActivityDate: dateString,
-						currentStreak: 1,
-						points: 0,
-						rank: 'beginner'
-					});
+				await db.insert(studentProfiles).values({
+					studentId: session.user.id,
+					totalStudyTime: timeSpent,
+					lastActivityDate: dateString,
+					currentStreak: 1,
+					points: 0,
+					rank: 'beginner'
+				});
 			}
 
 			// Award badges for first completion
@@ -261,6 +256,10 @@ export const actions: Actions = {
 			// Check if all lessons in the module are completed
 			const moduleCompleted = await isModuleCompleted(session.user.id, moduleId);
 
+			// Variable to track if the entire subject is completed
+			let subjectCompleted = false;
+			let certificate = null;
+
 			// If module is completed, award badges
 			if (moduleCompleted) {
 				// Award module badges
@@ -281,6 +280,28 @@ export const actions: Actions = {
 						}
 					});
 				}
+
+				try {
+					certificate = await checkAndAwardSubjectCertificates(session.user.id, moduleId);
+				} catch (error) {
+					console.error('Error checking for subject completion:', error);
+				}
+			}
+
+			const module = await db.query.modules.findFirst({
+				where: eq(modules.id, moduleId)
+			});
+
+			if (module?.subjectId) {
+				// Check if all modules in the subject are completed
+				const isSubjectComplete = await isSubjectCompleted(session.user.id, module.subjectId);
+
+				if (isSubjectComplete) {
+					subjectCompleted = true;
+
+					// Award certificate if we just completed the subject
+					await checkAndAwardSubjectCertificates(session.user.id, moduleId);
+				}
 			}
 
 			// Find next module ID if current module is completed
@@ -291,7 +312,8 @@ export const actions: Actions = {
 				moduleCompleted,
 				badges,
 				nextLessonId: lesson.nextLessonId,
-				nextModuleId
+				nextModuleId,
+				certificate
 			};
 		} catch (error) {
 			console.error(`Error updating progress:`, error);

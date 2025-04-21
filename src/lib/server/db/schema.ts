@@ -189,6 +189,7 @@ export const certificates = pgTable('certificates', {
 	description: text('description'),
 	subjectId: integer('subject_id').references(() => subjects.id, { onDelete: 'cascade' }),
 	templateImage: varchar('template_image', { length: 255 }),
+	iconImage: varchar('icon_image', { length: 255 }),
 	requiredModules: jsonb('required_modules'),
 });
 

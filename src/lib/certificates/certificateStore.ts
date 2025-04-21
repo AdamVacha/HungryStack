@@ -9,6 +9,7 @@ export interface Certificate {
 	subjectId: number;
 	subjectName: string;
 	templateImage: string;
+	iconImage: string;
 	earnedAt: string;
 	completionData: {
 		subjectName: string;

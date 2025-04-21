@@ -10,7 +10,21 @@
 	let username = $derived($page.data.session?.user?.name ?? 'Student');
 	let showSaveButton = $state(true);
 
-	// Format date for display
+	const subjectBorders = {
+		HTML: 'border-red-300',
+		CSS: 'border-blue-300',
+		JavaScript: 'border-gray-300',
+		Backend: 'border-green-300',
+		default: 'border-primary-300'
+	};
+
+	let borderColor = $derived(
+		certificate && certificate.subjectName
+			? subjectBorders[certificate.subjectName as keyof typeof subjectBorders] ||
+					subjectBorders.default
+			: subjectBorders.default
+	);
+
 	function formatDate(dateString: string): string {
 		return new Date(dateString).toLocaleDateString('en-US', {
 			year: 'numeric',
@@ -89,14 +103,13 @@
 
 		<div class="certificate-container" id="certificate-container">
 			<div
-				class="mx-auto max-w-4xl rounded-lg border-8 border-double border-primary-300 bg-white p-8 shadow-xl"
+				class="mx-auto max-w-4xl rounded-lg border-8 border-double bg-primary-50 {borderColor} p-8 shadow-xl"
 			>
 				<!-- Certificate Header with Subject-Based Color Scheme -->
-				<div class="text-center">
-					<h1 class="mb-2 text-3xl font-bold text-primary-700">Hungry Stack Certificate</h1>
-					<h2 class="mb-6 text-xl text-secondary-600">Certificate of Completion</h2>
+				<div class="text-center text-black">
+					<h1 class="mb-2 text-3xl font-bold text-gray-700">Certificate of Completion</h1>
+					<h2 class="mb-6 text-xl text-gray-600">Hungry Stack</h2>
 
-					<!-- Show SVG template here for visual reference -->
 					<div class="mb-4 flex justify-center">
 						<img src={certificate.templateImage} alt={certificate.title} class="h-40 w-auto" />
 					</div>
@@ -104,7 +117,7 @@
 					<p class="mb-4 text-lg">This certifies that</p>
 					<h3 class="mb-4 text-2xl font-bold text-primary-600">{username}</h3>
 					<p class="mb-6 text-lg">has successfully completed all modules in</p>
-					<h3 class="mb-6 text-2xl font-bold text-secondary-600">{certificate.subjectName}</h3>
+					<h3 class="mb-6 text-2xl font-bold text-gray-700">{certificate.subjectName}</h3>
 
 					<p class="mb-8 text-center">
 						Demonstrating proficiency in all required skills and knowledge of the {certificate.subjectName}

@@ -19,11 +19,11 @@
 	}
 </script>
 
-<div class="card w-full p-3">
+<div class="card w-full p-4 pb-1">
 	<!-- Header -->
-	<header class="mb-3 flex items-center justify-between">
+	<header class="mb-4 flex items-center justify-between">
 		<h2
-			class="h3 bg-gradient-to-br from-green-500 to-blue-500 box-decoration-clone bg-clip-text pb-1 font-semibold text-transparent"
+			class="h2 bg-gradient-to-br from-green-500 to-blue-500 box-decoration-clone bg-clip-text pb-1 font-semibold text-transparent"
 		>
 			Your Certificates
 		</h2>
@@ -33,81 +33,32 @@
 	</header>
 
 	<!-- Certificate display area -->
-	<div class="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+
+	<div class="mb-3 grid grid-cols-2 gap-4 sm:grid-cols-4">
 		{#each displayCertificates as certificate (certificate.id)}
 			<div
-				class="certificate-card flex flex-col overflow-hidden rounded-lg border border-surface-300 bg-surface-100 transition-all hover:bg-surface-200 hover:shadow-md"
+				class="certificate-card bg-surface-50 dark:bg-surface-700 flex flex-col overflow-hidden rounded-lg border-surface-300 shadow-lg transition-all"
 			>
 				<!-- Certificate thumbnail -->
-				<div class="certificate-thumbnail flex items-center justify-center p-1">
-					<div class="aspect-[4/3] w-full overflow-hidden rounded-md bg-white shadow-md">
-						{#if certificate.templateImage?.startsWith('data:image/svg+xml')}
-							<!-- SVG data URI -->
-							<img
-								src={certificate.templateImage}
-								alt={certificate.title}
-								class="h-full w-full object-contain p-1"
-							/>
-						{:else}
-							<!-- Fallback SVG certificate -->
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								viewBox="0 0 400 300"
-								class="h-full w-full p-2"
-							>
-								<rect width="100%" height="100%" fill="#f8f8ff" />
-								<rect
-									x="10"
-									y="10"
-									width="380"
-									height="280"
-									stroke="#3E6E93"
-									stroke-width="4"
-									fill="none"
-									rx="5"
-									ry="5"
-								/>
-								<rect
-									x="20"
-									y="20"
-									width="360"
-									height="260"
-									stroke="#336791"
-									stroke-width="2"
-									fill="none"
-									rx="3"
-									ry="3"
-								/>
-								<text
-									x="200"
-									y="80"
-									font-family="Arial"
-									font-size="24"
-									text-anchor="middle"
-									fill="#336791">{certificate.title}</text
-								>
-								<text
-									x="200"
-									y="110"
-									font-family="Arial"
-									font-size="12"
-									text-anchor="middle"
-									fill="#333">Certificate</text
-								>
-							</svg>
-						{/if}
+				<div class="certificate-thumbnail bg-surface-200-700 flex items-center justify-center p-3">
+					<div class="w-full  overflow-hidden p-1">
+						<img
+							src={certificate.iconImage}
+							alt={certificate.title}
+							class="h-auto rounded-md object-cover"
+						/>
 					</div>
 				</div>
 
-				<!-- Certificate info - more compact -->
-				<div class="flex-1 p-2">
-					<h4 class="line-clamp-1 text-sm font-semibold">{certificate.title}</h4>
-					<p class="mb-1 text-xs text-gray-600">{formatDate(certificate.earnedAt)}</p>
+				<!-- Certificate info -->
+				<div class="flex-1 p-3 pt-0 text-center">
+					<h4 class="mb-1 line-clamp-1 text-sm font-bold">{certificate.title}</h4>
+					<p class="mb-2 text-xs">{formatDate(certificate.earnedAt)}</p>
 					<button
-						class="variant-filled-primary btn btn-sm w-full py-1 text-xs"
+						class="variant-filled-primary btn btn-sm w-full py-1.5 text-xs font-medium"
 						onclick={() => viewCertificate(certificate.id)}
 					>
-						View
+						View Certificate
 					</button>
 				</div>
 			</div>
@@ -122,7 +73,7 @@
 					<!-- Certificate thumbnail -->
 					<div class="certificate-thumbnail flex items-center justify-center p-1">
 						<div
-							class="bg-surface-200-700 aspect-[4/3] w-full overflow-hidden rounded-md shadow-md"
+							class="bg-surface-200-700 aspect-square w-full overflow-hidden rounded-md shadow-md"
 						>
 							<div class="flex h-full w-full items-center justify-center">
 								<svg
@@ -147,7 +98,7 @@
 					</div>
 
 					<!-- Certificate info -->
-					<div class="flex-1 p-2">
+					<div class="flex-1 p-2 text-center">
 						<h4 class="line-clamp-1 text-sm font-semibold">Future Certificate</h4>
 						<p class="mb-1 line-clamp-1 text-xs text-gray-500">Complete all modules</p>
 						<button class="variant-filled-surface btn btn-sm w-full py-1 text-xs" disabled>
@@ -175,7 +126,7 @@
 		min-height: 30px;
 	}
 
-	.aspect-\[4\/3\] {
-		aspect-ratio: 4/3;
+	.aspect-square {
+		aspect-ratio: 1 / 1;
 	}
 </style>
