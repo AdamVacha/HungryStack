@@ -1,7 +1,6 @@
 import { SvelteKitAuth } from '@auth/sveltekit';
 import GitHub from '@auth/sveltekit/providers/github';
 import Google from '@auth/sveltekit/providers/google';
-import { env } from '$env/dynamic/private';
 import { DrizzleAdapter } from '@auth/drizzle-adapter';
 import {
 	users,
@@ -58,13 +57,14 @@ export const {
 	},
 	providers: [
 		GitHub({
-			clientId: env.GITHUB_ID,
-			clientSecret: env.GITHUB_SECRET
+			clientId: process.env.GITHUB_ID,
+			clientSecret: process.env.GITHUB_SECRET
 		}),
 		Google({
-			clientId: env.GOOGLE_ID,
-			clientSecret: env.GOOGLE_SECRET
+			clientId: process.env.GOOGLE_ID,
+			clientSecret: process.env.GOOGLE_SECRET
 		})
 	],
-	trustHost: true
+	trustHost: true,
+	secret: process.env.AUTH_SECRET
 });
