@@ -1,4 +1,3 @@
-// src/routes/certificates/[id]/+page.svelte
 <script lang="ts">
 	import { earnedCertificates, initCertificateStore } from '$lib/certificates/certificateStore';
 	import { page } from '$app/stores';
@@ -41,7 +40,7 @@
 				</svg>
 				<h2 class="mb-2 text-xl font-bold">Certificate Not Found</h2>
 				<p>The certificate you're looking for doesn't exist or hasn't been earned yet.</p>
-				<a href="/dashboard" class="btn variant-filled-primary mt-4">Return to Dashboard</a>
+				<a href="/dashboard" class="variant-filled-primary btn mt-4">Return to Dashboard</a>
 			</div>
 		</div>
 	</div>
