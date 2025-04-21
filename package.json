@@ -31,6 +31,7 @@
 		"@types/codemirror": "^5.60.15",
 		"@types/lodash": "^4.17.16",
 		"@types/node": "^22.10.2",
+		"@types/pg": "^8.11.13",
 		"amplify-adapter": "^0.2.0",
 		"autoprefixer": "^10.4.20",
 		"dotenv": "^16.4.7",
@@ -77,6 +78,7 @@
 		"html2canvas": "^1.4.1",
 		"lodash-es": "^4.17.21",
 		"lottie-web": "^5.12.2",
+		"pg": "^8.14.1",
 		"pnpm": "^10.2.1",
 		"postgres": "^3.4.5",
 		"svelte-codemirror-editor": "^1.4.1"
