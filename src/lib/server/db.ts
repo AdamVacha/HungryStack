@@ -1,8 +1,9 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from '$lib/server/db/schema';
+import { DATABASE_URL } from '$env/static/private';
 
-const dbUrl = process.env.DATABASE_URL;
+const dbUrl = DATABASE_URL;
 
 if (!dbUrl) throw new Error('DATABASE_URL is required (db-ts)');
 
