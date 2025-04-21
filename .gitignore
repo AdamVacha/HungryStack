@@ -24,3 +24,8 @@ vite.config.ts.timestamp-*
 
 # Paraglide
 src/lib/paraglide
+
+# amplify
+.amplify
+amplify_outputs*
+amplifyconfiguration*
