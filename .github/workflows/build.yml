@@ -24,6 +24,7 @@ jobs:
           --health-retries 5
 
     env:
+      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
       GITHUB_ID: ${{ secrets.GITHUB_ID }}
       GITHUB_SECRET: ${{ secrets.GITHUB_SECRET }}
       GOOGLE_ID: ${{ secrets.GOOGLE_ID }}
