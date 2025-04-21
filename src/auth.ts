@@ -13,6 +13,11 @@ import {
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 
+const githubId = GITHUB_ID || process.env.GITHUB_ID;
+const githubSecret = GITHUB_SECRET || process.env.GITHUB_SECRET;
+const googleId = GOOGLE_ID || process.env.GOOGLE_ID;
+const googleSecret = GOOGLE_SECRET || process.env.GOOGLE_SECRET;
+
 export const {
 	handle: handleAuth,
 	signIn,
@@ -58,12 +63,13 @@ export const {
 	},
 	providers: [
 		GitHub({
-			clientId: GITHUB_ID,
-			clientSecret: GITHUB_SECRET
+			clientId: githubId,
+			clientSecret: githubSecret
 		}),
 		Google({
-			clientId: GOOGLE_ID,
-			clientSecret: GOOGLE_SECRET
+			clientId: googleId,
+			clientSecret: googleSecret
 		})
-	]
+	],
+	trustHost: true
 });
