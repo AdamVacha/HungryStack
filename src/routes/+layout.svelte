@@ -12,11 +12,13 @@
 	import type { PopupSettings } from '@skeletonlabs/skeleton';
 	storePopup.set({ computePosition, autoUpdate, offset, shift, flip, arrow });
 	import { initBadgeStore } from '$lib/badges/badges';
+	import { initCertificateStore } from '$lib/certificates/certificateStore';
 	import { onMount } from 'svelte';
 
 	onMount(() => {
 		if (page.data.session?.user) {
 			initBadgeStore();
+			initCertificateStore();
 		}
 	});
 

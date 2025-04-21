@@ -5,7 +5,7 @@
 	import { goto } from '$app/navigation';
 	import { refreshBadgeData } from '$lib/badges/badges';
 	import { showBadgeNotification } from '$lib/badges/badgeNotification';
-
+	import Confetti from '$lib/components/Confetti.svelte';
 	// CodeMirror imports
 	import { basicSetup } from 'codemirror';
 	import { EditorView, keymap } from '@codemirror/view';
@@ -36,6 +36,8 @@
 	let timeSpent = $state(0);
 	let timeTracker: number | undefined;
 
+	let confettiComponent: Confetti;
+
 	// Set initial code value after lesson data is available
 	$effect(() => {
 		if (lesson?.id) {
@@ -58,6 +60,21 @@
 			});
 		}
 	});
+	function handleConfettiComplete() {
+		console.log('Confetti animation completed');
+	}
+
+	function handleConfettiError(error: any) {
+		console.error('Error in confetti animation:', error);
+	}
+
+	function playConfettiAnimation() {
+		if (confettiComponent) {
+			confettiComponent.playConfetti();
+		} else {
+			console.error('Confetti component not available');
+		}
+	}
 
 	// Determine language extensions based on subject
 	function getLanguageExtension() {
@@ -155,9 +172,6 @@
 		};
 	});
 
-	/**
-	 * Mark lesson as completed and return the response
-	 */
 	async function markLessonComplete() {
 		if (isCompleted || !lesson?.id) return;
 
@@ -181,11 +195,78 @@
 			// Parse result
 			const result = await response.json();
 
+			console.log('Lesson completion result:', result);
+
+			const resultProperties = Object.keys(result);
+			console.log('Result properties:', resultProperties);
+
+			let shouldPlayConfetti = false;
+
+			if (typeof result.data === 'string') {
+				try {
+					const parsedData = JSON.parse(result.data);
+					console.log('Parsed result.data:', parsedData);
+
+					if (Array.isArray(parsedData) && parsedData.length > 13) {
+						const possibleCertificate = parsedData[13];
+						if (
+							possibleCertificate &&
+							typeof possibleCertificate === 'object' &&
+							possibleCertificate.title &&
+							possibleCertificate.templateImage
+						) {
+							console.log('Certificate found in parsed array:', possibleCertificate);
+							shouldPlayConfetti = true;
+						}
+						if (
+							parsedData[14] &&
+							typeof parsedData[14] === 'string' &&
+							parsedData[14].includes('Master')
+						) {
+							console.log('Certificate title found in array:', parsedData[14]);
+							shouldPlayConfetti = true;
+						}
+
+						if (
+							parsedData[0] &&
+							typeof parsedData[0] === 'object' &&
+							parsedData[0].moduleCompleted === 1
+						) {
+							console.log('Module completion found in array:', parsedData[0]);
+							shouldPlayConfetti = true;
+						}
+
+						if (parsedData[1] === true) {
+							console.log('Subject completion flag found in array');
+							shouldPlayConfetti = true;
+						}
+					}
+				} catch (parseError) {
+					console.error('Error parsing result.data:', parseError);
+				}
+			}
+
+			if (shouldPlayConfetti) {
+				console.log('Playing confetti animation!');
+				setTimeout(() => {
+					playConfettiAnimation();
+				}, 500); // Short delay to ensure UI is updated first
+			} else {
+				console.log('No conditions met for playing confetti');
+			}
+
 			// Process badge notifications
 			processBadgeNotifications(result);
 
 			// Refresh badge data in background
 			await refreshBadgeData();
+
+			try {
+				const { refreshCertificateData } = await import('$lib/certificates/certificateStore');
+				await refreshCertificateData();
+			} catch (certificateError) {
+				console.error('Error refreshing certificate data:', certificateError);
+			}
 
 			return result;
 		} catch (error) {
@@ -193,7 +274,6 @@
 			return null;
 		}
 	}
-
 	/**
 	 * Process badge notifications from server response
 	 */
@@ -261,6 +341,11 @@
 </script>
 
 <BadgeNotification />
+<Confetti
+	bind:this={confettiComponent}
+	onComplete={handleConfettiComplete}
+	onError={handleConfettiError}
+/>
 
 <div
 	class="flex h-screen w-full flex-1 flex-col overflow-hidden rounded-lg bg-surface-300 p-2 shadow-lg sm:p-4 md:p-6 dark:bg-gray-900"

@@ -15,6 +15,13 @@ const DEFAULT_TEMPLATES = {
 	Javascript: '/images/certificates/javascript-certificate.png',
 	Backend: '/images/certificates/backend-certificate.png'
 };
+ 
+const DEFAULT_ICONS = {
+	HTML: '/images/certificates/icons/html-icon.png',
+	CSS: '/images/certificates/icons/css-icon.png',
+	Javascript: '/images/certificates/icons/javascript-icon.png',
+	Backend: '/images/certificates/icons/backend-icon.png'
+}
 
 // Seed initial certificates for each subject
 export async function seedCertificates() {
@@ -36,6 +43,8 @@ export async function seedCertificates() {
 		templateImage:
 			DEFAULT_TEMPLATES[subject.name as keyof typeof DEFAULT_TEMPLATES] ||
 			'/images/certificates/default-certificate.png',
+		iconImage: DEFAULT_ICONS[subject.name as keyof typeof DEFAULT_ICONS] ||
+			'/images/certificates/icons/default-icon.png',
 		requiredModules: null
 	}));
 
@@ -219,6 +228,7 @@ export async function getUserCertificates(userId: string): Promise<any[]> {
 				subjectId: certificates.subjectId,
 				subjectName: subjects.name,
 				templateImage: certificates.templateImage,
+				iconImage: certificates.iconImage,
 				earnedAt: studentCertificates.earnedAt,
 				completionData: studentCertificates.completionData
 			})
