@@ -66,6 +66,5 @@ export const {
 			clientSecret: env.GOOGLE_SECRET
 		})
 	],
-	trustHost: env.AUTH_TRUST_HOST === 'true' || process.env.AUTH_TRUST_HOST === 'true',
-	secret: env.AUTH_SECRET
+	trustHost: true
 });
