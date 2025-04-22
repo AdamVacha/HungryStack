@@ -80,7 +80,7 @@
 								/>
 							</svg>
 						</div>
-						<h3 class="mb-2 text-xl font-bold">Four Core Modules</h3>
+						<h3 class="mb-2 text-xl font-bold">Four Core Subjects</h3>
 						<p class="text-gray-300">
 							Stack your pancakes with HTML, CSS, JavaScript, and Backend Development modules
 						</p>

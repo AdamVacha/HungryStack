@@ -29,7 +29,7 @@
 	<!-- Badge display area -->
 	{#if displayBadges.length === 0}
 		<div class="flex flex-col items-center justify-center text-center">
-			<div class="mb-2 h-32 opacity-40">
+			<div class="mb-2 h-28 opacity-40">
 				<img src="/badges/locked-badge.png" alt="No badges yet" class="h-full w-full" />
 			</div>
 			<h3 class="h4 mb-2">No Badges Yet</h3>
@@ -37,7 +37,7 @@
 		</div>
 	{:else}
 		<!-- Badge grid -->
-		<div class="mb-4 grid grid-cols-2 gap-4 md:grid-cols-3 pb-2 lg:grid-cols-5">
+		<div class="mb-4 grid grid-cols-2 gap-4 pb-2 md:grid-cols-3 lg:grid-cols-5">
 			{#each displayBadges as badge, i (badge.id)}
 				<div
 					class="flex flex-col items-center text-center"
@@ -48,7 +48,7 @@
 						easing: quintOut
 					}}
 				>
-					<div class="avatar badge-container mb-2 h-32 p-1">
+					<div class="avatar badge-container mb-2 h-28 p-1">
 						<img src={badge.image} alt={badge.title} class="h-full w-full object-cover" />
 					</div>
 					<h3 class="line-clamp-1 text-sm font-bold">{badge.title}</h3>
