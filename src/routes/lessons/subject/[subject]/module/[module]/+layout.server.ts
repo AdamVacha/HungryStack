@@ -8,8 +8,14 @@ export const load: LayoutServerLoad = async ({ params, parent, locals }) => {
 	const { module: moduleId, lesson: lessonId } = params;
 	const { subject } = await parent();
 
-	const allModules = subject.modules || [];
-
+	const allModules = (subject.modules || []).sort((a, b) => {
+		// Order modules
+		if (a.orderInSubject && b.orderInSubject) {
+			return a.orderInSubject - b.orderInSubject;
+		}
+		// Fallback to ID
+		return a.id - b.id;
+	});
 	const module = allModules.find((m) => m.id === +moduleId);
 	if (!module) {
 		return error(404, 'Module not found');
