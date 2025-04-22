@@ -31,7 +31,7 @@
 
 	// Local state for editor and UI
 	let code = $state('');
-	let isCodePanelHorizontal = $state(window.innerWidth >= 768);
+	let isCodePanelHorizontal = $state(false);
 	let isCompleted = $state(data?.progress ? data.progress.completedAt !== null : false);
 	let timeSpent = $state(0);
 	let timeTracker: number | undefined;
@@ -154,6 +154,8 @@
 
 	// Start tracking time spent on the lesson
 	onMount(() => {
+		isCodePanelHorizontal = window.innerWidth >= 768;
+
 		createCodeMirrorEditor();
 
 		// Add resize listener
