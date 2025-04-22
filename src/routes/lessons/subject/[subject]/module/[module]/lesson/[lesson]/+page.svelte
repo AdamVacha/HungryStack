@@ -54,10 +54,12 @@
 			}
 
 			// Then recreate the editor
-			requestAnimationFrame(() => {
-				createCodeMirrorEditor();
-				updateEditorContent(lesson.content);
-			});
+			if (typeof window !== 'undefined') {
+				requestAnimationFrame(() => {
+					createCodeMirrorEditor();
+					updateEditorContent(lesson.content);
+				});
+			}
 		}
 	});
 	function handleConfettiComplete() {
@@ -135,17 +137,21 @@
 
 	// Handle window resize for responsive layout
 	function handleResize() {
-		const newIsHorizontal = window.innerWidth >= 768;
-		if (newIsHorizontal !== isCodePanelHorizontal) {
-			isCodePanelHorizontal = newIsHorizontal;
+		if (typeof window !== 'undefined') {
+			const newIsHorizontal = window.innerWidth >= 768;
+			if (newIsHorizontal !== isCodePanelHorizontal) {
+				isCodePanelHorizontal = newIsHorizontal;
+			}
 		}
 	}
 
 	// Update iframe preview
 	function updateIframePreview() {
-		const iframe = document.getElementById('live-preview-iframe') as HTMLIFrameElement;
-		if (iframe) {
-			iframe.src = `data:text/html;charset=utf-8,${encodeURIComponent(code)}`;
+		if (typeof document !== 'undefined') {
+			const iframe = document.getElementById('live-preview-iframe') as HTMLIFrameElement;
+			if (iframe) {
+				iframe.src = `data:text/html;charset=utf-8,${encodeURIComponent(code)}`;
+			}
 		}
 	}
 
