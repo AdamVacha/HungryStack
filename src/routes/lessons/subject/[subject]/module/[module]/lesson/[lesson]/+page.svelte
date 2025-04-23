@@ -364,7 +364,9 @@
 				{lesson?.title || 'Loading...'}
 			</h1>
 		</div>
-		<div class:hidden={lesson?.id !== 1}>
+		<div
+			class:hidden={lesson?.id !== 1 || lesson?.id !== 29 || lesson?.id !== 58 || lesson?.id !== 82}
+		>
 			<p class="text-sm sm:text-base">Modify the code below and see the result in real time!</p>
 		</div>
 	</header>
