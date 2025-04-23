@@ -53,12 +53,6 @@
 		});
 	});
 
-	let certificates = [
-		{ title: 'HTML Basics', description: 'Completed HTML Foundations' },
-		{ title: 'CSS Mastery', description: 'Completed CSS Animations' },
-		{ title: 'JavaScript Pro', description: 'Built your first async function' }
-	];
-
 	let messages = {
 		default: `Welcome, ${username}!<br> Keep stacking your pancakes!`,
 		html: 'HTML is the backbone of web pages. It structures your content!',
@@ -76,30 +70,21 @@
 		speechBubbleText = messages[category] || messages.default;
 	}
 
-	/**
+	/** Navigate to the appropriate lesson for the given subject
 	 * @param {string} subject
 	 */
 	function navigateToLesson(subject: string) {
-		console.log(`Navigating to ${subject}`, nextLessonLinks[subject]);
-		console.log(`Clicking ${subject} pancake`);
-		console.log(`Data for ${subject}:`, progressData[subject]);
-		console.log(`Next lesson link for ${subject}:`, nextLessonLinks[subject]);
+		// Get the data for this subject
+		const subjectData = progressData[subject];
 
-		// Get the subjectId from mapping
-		const subjectMap: Record<string, number> = {
-			html: 1,
-			css: 2,
-			javascript: 3,
-			backend: 4
-		};
-
-		const subjectId = subjectMap[subject] || 1;
-
+		// Go to last uncompleted lesson
 		if (nextLessonLinks[subject]) {
 			goto(nextLessonLinks[subject] as string);
 		} else {
-			// Get the first module and lesson for this subject
-			goto(`/lessons/subject/${subjectId}`);
+			// Or go to first lesson of first module if all lessons complete
+			goto(
+				`/lessons/subject/${subjectData.subjectId}/module/${subjectData.firstModuleInSubject}/lesson/${subjectData.firstLessonInSubject}`
+			);
 		}
 	}
 </script>

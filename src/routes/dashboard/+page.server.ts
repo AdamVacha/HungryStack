@@ -10,6 +10,8 @@ type ProgressInfo = {
 	nextLessonId?: number | null;
 	nextModuleId?: number | null;
 	subjectId: number;
+	firstModuleInSubject: number | null;
+	firstLessonInSubject: number | null;
 };
 
 // Create a type for the full progress data object
@@ -22,10 +24,15 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	// Initialize with an index signature to allow dynamic keys
 	const progressData: ProgressData = {
-		html: { progress: 0, subjectId: 0 },
-		css: { progress: 0, subjectId: 0 },
-		javascript: { progress: 0, subjectId: 0 },
-		backend: { progress: 0, subjectId: 0 }
+		html: { progress: 0, subjectId: 0, firstLessonInSubject: null, firstModuleInSubject: null },
+		css: { progress: 0, subjectId: 0, firstLessonInSubject: null, firstModuleInSubject: null },
+		javascript: {
+			progress: 0,
+			subjectId: 0,
+			firstLessonInSubject: null,
+			firstModuleInSubject: null
+		},
+		backend: { progress: 0, subjectId: 0, firstLessonInSubject: null, firstModuleInSubject: null }
 	};
 
 	if (session?.user?.id) {
@@ -45,7 +52,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 			if (subjectModules.length === 0) {
 				progressData[subjectName] = {
 					progress: 0,
-					subjectId: subject.id
+					subjectId: subject.id,
+					firstLessonInSubject: 0,
+					firstModuleInSubject: 0
 				};
 				continue;
 			}
@@ -64,7 +73,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 			if (totalLessons === 0) {
 				progressData[subjectName] = {
 					progress: 0,
-					subjectId: subject.id
+					subjectId: subject.id,
+					firstLessonInSubject: 0,
+					firstModuleInSubject: 0
 				};
 				continue;
 			}
@@ -89,22 +100,32 @@ export const load: PageServerLoad = async ({ locals }) => {
 			let nextLessonId = null;
 			let nextModuleId = null;
 
+			// Get first module and lesson for this subject (for restart case)
+			const firstModule = subjectModules.sort(
+				(a, b) => (a.orderInSubject || 0) - (b.orderInSubject || 0)
+			)[0];
+
+			let firstLessonId: number | null = null;
+			let firstModuleId: number | null = null;
+
+			if (firstModule) {
+				firstModuleId = firstModule.id;
+
+				const firstLesson = subjectLessons
+					.filter((l) => l.moduleId === firstModule.id)
+					.sort((a, b) => (a.orderInModule || 0) - (b.orderInModule || 0))[0];
+
+				if (firstLesson) {
+					firstLessonId = firstLesson.id;
+				}
+			}
+
 			// First, check if there are any completed lessons
 			if (completedLessonIds.length === 0) {
 				// No lessons completed yet? go to first lesson in the first module
-				const firstModule = subjectModules.sort(
-					(a, b) => (a.orderInSubject || 0) - (b.orderInSubject || 0)
-				)[0];
-
-				if (firstModule) {
-					const firstLesson = subjectLessons
-						.filter((l) => l.moduleId === firstModule.id)
-						.sort((a, b) => (a.orderInModule || 0) - (b.orderInModule || 0))[0];
-
-					if (firstLesson) {
-						nextLessonId = firstLesson.id;
-						nextModuleId = firstModule.id;
-					}
+				if (firstModuleId && firstLessonId) {
+					nextLessonId = firstLessonId;
+					nextModuleId = firstModuleId;
 				}
 			} else {
 				// Has completed lessons? find the next uncompleted one
@@ -126,12 +147,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 					if (nextLessonId) break;
 				}
 			}
-		
+
 			progressData[subjectName] = {
 				progress,
 				nextLessonId,
 				nextModuleId,
-				subjectId: subject.id
+				subjectId: subject.id,
+				firstModuleInSubject: firstModuleId,
+				firstLessonInSubject: firstLessonId
 			};
 		}
 	}
