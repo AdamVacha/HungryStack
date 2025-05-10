@@ -130,8 +130,8 @@ importers:
         specifier: ^8.15.1
         version: 8.15.1
       amplify-adapter:
-        specifier: ^0.2.2
-        version: 0.2.2(@sveltejs/kit@2.20.8(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.28.2)(vite@6.3.5(@types/node@22.15.17)(jiti@1.21.7)(yaml@2.7.1)))(svelte@5.28.2)(vite@6.3.5(@types/node@22.15.17)(jiti@1.21.7)(yaml@2.7.1)))
+        specifier: ^1.1.0
+        version: 1.1.0(@sveltejs/kit@2.20.8(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.28.2)(vite@6.3.5(@types/node@22.15.17)(jiti@1.21.7)(yaml@2.7.1)))(svelte@5.28.2)(vite@6.3.5(@types/node@22.15.17)(jiti@1.21.7)(yaml@2.7.1)))(typescript@5.8.3)
       autoprefixer:
         specifier: ^10.4.21
         version: 10.4.21(postcss@8.5.3)
@@ -2117,8 +2117,8 @@ packages:
   ajv@6.12.6:
     resolution: {integrity: sha512-j3fVLgvTo527anyYyJOGTYJbG+vnnQYvE0m5mmkc1TK+nxAppkCLMIL0aZ4dblVCNoGShhm+kzE4ZUykBoMg4g==}
 
-  amplify-adapter@0.2.2:
-    resolution: {integrity: sha512-9zjoXRG6VAEDIMPRQiMJlVHeW+IN5QcfSBQQkgS+rvERuOUPZb+hV+53nXUDpgWqtkkiivdm2BCQsm5PV9ZbeQ==}
+  amplify-adapter@1.1.0:
+    resolution: {integrity: sha512-zGlL9ekkU2Vu2WqkRTjej8RJYqJjZyKbDUm2OKCAjip+fqh0bAaj4uciDwgbCjX7WRuULbvS41eifAh6B1Qoiw==}
     peerDependencies:
       '@sveltejs/kit': ^1.0.0 || ^2.0.0
 
@@ -5896,9 +5896,13 @@ snapshots:
       json-schema-traverse: 0.4.1
       uri-js: 4.4.1
 
-  amplify-adapter@0.2.2(@sveltejs/kit@2.20.8(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.28.2)(vite@6.3.5(@types/node@22.15.17)(jiti@1.21.7)(yaml@2.7.1)))(svelte@5.28.2)(vite@6.3.5(@types/node@22.15.17)(jiti@1.21.7)(yaml@2.7.1))):
+  amplify-adapter@1.1.0(@sveltejs/kit@2.20.8(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.28.2)(vite@6.3.5(@types/node@22.15.17)(jiti@1.21.7)(yaml@2.7.1)))(svelte@5.28.2)(vite@6.3.5(@types/node@22.15.17)(jiti@1.21.7)(yaml@2.7.1)))(typescript@5.8.3):
     dependencies:
       '@sveltejs/kit': 2.20.8(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.28.2)(vite@6.3.5(@types/node@22.15.17)(jiti@1.21.7)(yaml@2.7.1)))(svelte@5.28.2)(vite@6.3.5(@types/node@22.15.17)(jiti@1.21.7)(yaml@2.7.1))
+      rolldown: 1.0.0-beta.8(typescript@5.8.3)
+    transitivePeerDependencies:
+      - '@oxc-project/runtime'
+      - typescript
 
   ansi-regex@5.0.1: {}
 
