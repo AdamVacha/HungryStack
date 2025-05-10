@@ -61,7 +61,7 @@ jobs:
         run: pnpm install
 
       - name: TEMP FIX – Update amplify-adapter
-        run: pnpm up amplify-adapter
+        run: pnpm up amplify-adapter --latest
 
       - name: TEMP FIX – Add missing dependency for amplify-adapter
         run: pnpm add -D rolldown
