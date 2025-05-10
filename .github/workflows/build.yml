@@ -60,6 +60,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Sync SvelteKit config
+        run: pnpm svelte-kit sync
+
       - name: Run Database Generate
         run: pnpm drizzle-kit generate
 
