@@ -296,6 +296,7 @@ export const actions: Actions = {
 				// Check if all modules in the subject are completed
 				const isSubjectComplete = await isSubjectCompleted(session.user.id, module.subjectId);
 
+				// TODO use the function to send user back to dashboard on completion of subject
 				if (isSubjectComplete) {
 					subjectCompleted = true;
 
